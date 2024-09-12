@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,13 +23,13 @@
  */
 package org.ta4j.core.indicators.pivotpoints;
 
-import org.ta4j.core.Bar;
-import org.ta4j.core.indicators.RecursiveCachedIndicator;
-import org.ta4j.core.num.Num;
+import static org.ta4j.core.num.NaN.NaN;
 
 import java.util.List;
 
-import static org.ta4j.core.num.NaN.NaN;
+import org.ta4j.core.Bar;
+import org.ta4j.core.indicators.RecursiveCachedIndicator;
+import org.ta4j.core.num.Num;
 
 /**
  * DeMark Reversal Indicator.
@@ -51,8 +51,8 @@ public class DeMarkReversalIndicator extends RecursiveCachedIndicator<Num> {
     /**
      * Constructor.
      *
-     * Calculates the DeMark reversal for the corresponding pivot level
-     * 
+     * Calculates the DeMark reversal for the corresponding pivot level.
+     *
      * @param pivotPointIndicator the {@link DeMarkPivotPointIndicator} for this
      *                            reversal
      * @param level               the {@link DeMarkPivotLevel} for this reversal
@@ -77,7 +77,11 @@ public class DeMarkReversalIndicator extends RecursiveCachedIndicator<Num> {
         }
 
         return result;
+    }
 
+    @Override
+    public int getUnstableBars() {
+        return 0;
     }
 
     private Num calculateResistance(Num x, int index) {

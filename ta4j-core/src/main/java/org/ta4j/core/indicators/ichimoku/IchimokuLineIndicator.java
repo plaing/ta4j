@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,13 +23,13 @@
  */
 package org.ta4j.core.indicators.ichimoku;
 
-import org.ta4j.core.Indicator;
 import org.ta4j.core.BarSeries;
+import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.CachedIndicator;
-import org.ta4j.core.indicators.helpers.HighestValueIndicator;
-import org.ta4j.core.indicators.helpers.LowestValueIndicator;
 import org.ta4j.core.indicators.helpers.HighPriceIndicator;
+import org.ta4j.core.indicators.helpers.HighestValueIndicator;
 import org.ta4j.core.indicators.helpers.LowPriceIndicator;
+import org.ta4j.core.indicators.helpers.LowestValueIndicator;
 import org.ta4j.core.num.Num;
 
 /**
@@ -41,26 +41,31 @@ import org.ta4j.core.num.Num;
  */
 public class IchimokuLineIndicator extends CachedIndicator<Num> {
 
-    /** The period high */
+    /** The period high. */
     private final Indicator<Num> periodHigh;
 
-    /** The period low */
+    /** The period low. */
     private final Indicator<Num> periodLow;
 
     /**
      * Contructor.
-     * 
-     * @param series   the series
+     *
+     * @param series   the bar series
      * @param barCount the time frame
      */
     public IchimokuLineIndicator(BarSeries series, int barCount) {
         super(series);
-        periodHigh = new HighestValueIndicator(new HighPriceIndicator(series), barCount);
-        periodLow = new LowestValueIndicator(new LowPriceIndicator(series), barCount);
+        this.periodHigh = new HighestValueIndicator(new HighPriceIndicator(series), barCount);
+        this.periodLow = new LowestValueIndicator(new LowPriceIndicator(series), barCount);
     }
 
     @Override
     protected Num calculate(int index) {
         return periodHigh.getValue(index).plus(periodLow.getValue(index)).dividedBy(numOf(2));
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return 0;
     }
 }

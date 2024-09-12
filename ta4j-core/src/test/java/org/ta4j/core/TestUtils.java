@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,14 +23,15 @@
  */
 package org.ta4j.core;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.ta4j.core.num.Num;
-import org.ta4j.core.num.DecimalNum;
-
-import java.math.BigDecimal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+
+import java.math.BigDecimal;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.ta4j.core.num.DecimalNum;
+import org.ta4j.core.num.Num;
 
 /**
  * Utility class for {@code Num} tests.
@@ -46,9 +47,9 @@ public class TestUtils {
      * Verifies that the actual {@code Num} value is equal to the given
      * {@code String} representation.
      *
-     * @param actual   the actual {@code Num} value
      * @param expected the given {@code String} representation to compare the actual
      *                 value to
+     * @param actual   the actual {@code Num} value
      * @throws AssertionError if the actual value is not equal to the given
      *                        {@code String} representation
      */
@@ -59,9 +60,9 @@ public class TestUtils {
     /**
      * Verifies that the actual {@code Num} value is equal to the given {@code Num}.
      *
-     * @param actual   the actual {@code Num} value
      * @param expected the given {@code Num} representation to compare the actual
      *                 value to
+     * @param actual   the actual {@code Num} value
      * @throws AssertionError if the actual value is not equal to the given
      *                        {@code Num} representation
      */
@@ -73,13 +74,17 @@ public class TestUtils {
      * Verifies that the actual {@code Num} value is equal to the given {@code int}
      * representation.
      *
-     * @param actual   the actual {@code Num} value
+     * 
      * @param expected the given {@code int} representation to compare the actual
      *                 value to
+     * @param actual   the actual {@code Num} value
      * @throws AssertionError if the actual value is not equal to the given
      *                        {@code int} representation
      */
     public static void assertNumEquals(int expected, Num actual) {
+        if (actual.isNaN()) {
+            throw new AssertionError("Expected: " + expected + " Actual: " + actual);
+        }
         assertEquals(actual.numOf(expected), actual);
     }
 
@@ -87,9 +92,9 @@ public class TestUtils {
      * Verifies that the actual {@code Num} value is equal (within a positive
      * offset) to the given {@code double} representation.
      *
-     * @param actual   the actual {@code Num} value
      * @param expected the given {@code double} representation to compare the actual
      *                 value to
+     * @param actual   the actual {@code Num} value
      * @throws AssertionError if the actual value is not equal to the given
      *                        {@code double} representation
      */

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,8 +23,6 @@
  */
 package org.ta4j.core;
 
-import org.ta4j.core.num.Num;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -32,47 +30,13 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Function;
 
+import org.ta4j.core.num.Num;
+
 /**
- * End bar of a time period.
- *
- * Bar object is aggregated open/high/low/close/volume/etc. data over a time
- * period.
+ * A {@code Bar} is aggregated open/high/low/close/volume/etc. data over a time
+ * period. It represents the "end bar" of a time period.
  */
 public interface Bar extends Serializable {
-    /**
-     * @return the open price of the period
-     */
-    Num getOpenPrice();
-
-    /**
-     * @return the low price of the period
-     */
-    Num getLowPrice();
-
-    /**
-     * @return the high price of the period
-     */
-    Num getHighPrice();
-
-    /**
-     * @return the close price of the period
-     */
-    Num getClosePrice();
-
-    /**
-     * @return the whole tradeNum volume in the period
-     */
-    Num getVolume();
-
-    /**
-     * @return the number of trades in the period
-     */
-    int getTrades();
-
-    /**
-     * @return the whole traded amount of the period
-     */
-    Num getAmount();
 
     /**
      * @return the time period of the bar
@@ -88,6 +52,41 @@ public interface Bar extends Serializable {
      * @return the end timestamp of the bar period
      */
     ZonedDateTime getEndTime();
+
+    /**
+     * @return the open price of the bar period
+     */
+    Num getOpenPrice();
+
+    /**
+     * @return the high price of the bar period
+     */
+    Num getHighPrice();
+
+    /**
+     * @return the low price of the bar period
+     */
+    Num getLowPrice();
+
+    /**
+     * @return the close price of the bar period
+     */
+    Num getClosePrice();
+
+    /**
+     * @return the total traded volume of the bar period
+     */
+    Num getVolume();
+
+    /**
+     * @return the total traded amount (tradePrice x tradeVolume) of the bar period
+     */
+    Num getAmount();
+
+    /**
+     * @return the number of trades of the bar period
+     */
+    long getTrades();
 
     /**
      * @param timestamp a timestamp
@@ -131,44 +130,40 @@ public interface Bar extends Serializable {
     }
 
     /**
-     * Adds a trade at the end of bar period.
-     * 
+     * Adds a trade and updates the close price at the end of the bar period.
+     *
      * @param tradeVolume the traded volume
-     * @param tradePrice  the price
-     * @deprecated use corresponding function of {@link BarSeries}
-     */
-    @Deprecated
-    default void addTrade(double tradeVolume, double tradePrice, Function<Number, Num> numFunction) {
-        addTrade(numFunction.apply(tradeVolume), numFunction.apply(tradePrice));
-    }
-
-    /**
-     * Adds a trade at the end of bar period.
-     * 
-     * @param tradeVolume the traded volume
-     * @param tradePrice  the price
-     * @deprecated use corresponding function of {@link BarSeries}
-     */
-    @Deprecated
-    default void addTrade(String tradeVolume, String tradePrice, Function<Number, Num> numFunction) {
-        addTrade(numFunction.apply(new BigDecimal(tradeVolume)), numFunction.apply(new BigDecimal(tradePrice)));
-    }
-
-    /**
-     * Adds a trade at the end of bar period.
-     * 
-     * @param tradeVolume the traded volume
-     * @param tradePrice  the price
+     * @param tradePrice  the actual price per asset
      */
     void addTrade(Num tradeVolume, Num tradePrice);
 
+    /**
+     * Updates the close price at the end of the bar period. The open, high and low
+     * prices are also updated as needed.
+     * 
+     * @param price       the actual price per asset
+     * @param numFunction the numbers precision
+     */
     default void addPrice(String price, Function<Number, Num> numFunction) {
         addPrice(numFunction.apply(new BigDecimal(price)));
     }
 
+    /**
+     * Updates the close price at the end of the bar period. The open, high and low
+     * prices are also updated as needed.
+     * 
+     * @param price       the actual price per asset
+     * @param numFunction the numbers precision
+     */
     default void addPrice(Number price, Function<Number, Num> numFunction) {
         addPrice(numFunction.apply(price));
     }
 
+    /**
+     * Updates the close price at the end of the bar period. The open, high and low
+     * prices are also updated as needed.
+     * 
+     * @param price the actual price per asset
+     */
     void addPrice(Num price);
 }

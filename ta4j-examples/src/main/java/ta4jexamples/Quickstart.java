@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,19 +23,25 @@
  */
 package ta4jexamples;
 
-import org.ta4j.core.*;
+import org.ta4j.core.AnalysisCriterion;
+import org.ta4j.core.AnalysisCriterion.PositionFilter;
+import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.analysis.criteria.WinningTradesRatioCriterion;
-import org.ta4j.core.analysis.criteria.ReturnOverMaxDrawdownCriterion;
-import org.ta4j.core.analysis.criteria.TotalReturnCriterion;
-import org.ta4j.core.analysis.criteria.VersusBuyAndHoldCriterion;
+import org.ta4j.core.BaseStrategy;
+import org.ta4j.core.Rule;
+import org.ta4j.core.TradingRecord;
+import org.ta4j.core.criteria.PositionsRatioCriterion;
+import org.ta4j.core.criteria.ReturnOverMaxDrawdownCriterion;
+import org.ta4j.core.criteria.VersusEnterAndHoldCriterion;
+import org.ta4j.core.criteria.pnl.ReturnCriterion;
 import org.ta4j.core.indicators.SMAIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.Num;
-import org.ta4j.core.trading.rules.CrossedDownIndicatorRule;
-import org.ta4j.core.trading.rules.CrossedUpIndicatorRule;
-import org.ta4j.core.trading.rules.StopGainRule;
-import org.ta4j.core.trading.rules.StopLossRule;
+import org.ta4j.core.rules.CrossedDownIndicatorRule;
+import org.ta4j.core.rules.CrossedUpIndicatorRule;
+import org.ta4j.core.rules.StopGainRule;
+import org.ta4j.core.rules.StopLossRule;
+
 import ta4jexamples.loaders.CsvTradesLoader;
 
 /**
@@ -82,24 +88,25 @@ public class Quickstart {
         // - or if the price loses more than 3%
         // - or if the price earns more than 2%
         Rule sellingRule = new CrossedDownIndicatorRule(shortSma, longSma)
-                .or(new StopLossRule(closePrice, series.numOf(3))).or(new StopGainRule(closePrice, series.numOf(2)));
+                .or(new StopLossRule(closePrice, series.numOf(3)))
+                .or(new StopGainRule(closePrice, series.numOf(2)));
 
         // Running our juicy trading strategy...
         BarSeriesManager seriesManager = new BarSeriesManager(series);
         TradingRecord tradingRecord = seriesManager.run(new BaseStrategy(buyingRule, sellingRule));
-        System.out.println("Number of trades for our strategy: " + tradingRecord.getTradeCount());
+        System.out.println("Number of positions for our strategy: " + tradingRecord.getPositionCount());
 
         // Analysis
 
-        // Getting the winning trades ratio
-        AnalysisCriterion winningTradesRatio = new WinningTradesRatioCriterion();
-        System.out.println("Winning trades ratio: " + winningTradesRatio.calculate(series, tradingRecord));
+        // Getting the winning positions ratio
+        AnalysisCriterion winningPositionsRatio = new PositionsRatioCriterion(PositionFilter.PROFIT);
+        System.out.println("Winning positions ratio: " + winningPositionsRatio.calculate(series, tradingRecord));
         // Getting a risk-reward ratio
         AnalysisCriterion romad = new ReturnOverMaxDrawdownCriterion();
         System.out.println("Return over Max Drawdown: " + romad.calculate(series, tradingRecord));
 
         // Total return of our strategy vs total return of a buy-and-hold strategy
-        AnalysisCriterion vsBuyAndHold = new VersusBuyAndHoldCriterion(new TotalReturnCriterion());
+        AnalysisCriterion vsBuyAndHold = new VersusEnterAndHoldCriterion(new ReturnCriterion());
         System.out.println("Our return vs buy-and-hold return: " + vsBuyAndHold.calculate(series, tradingRecord));
 
         // Your turn!

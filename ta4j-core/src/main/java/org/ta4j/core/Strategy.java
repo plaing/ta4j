@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,11 +24,10 @@
 package org.ta4j.core;
 
 /**
- * A trading strategy.
- *
- * A strategy is a pair of complementary {@link Rule rules}. It may recommend to
- * enter or to exit. Recommendations are based respectively on the entry rule or
- * on the exit rule.
+ * A {@code Strategy} (also called "trading strategy") is a pair of
+ * complementary (entry and exit) {@link Rule rules}. It may recommend to enter
+ * or to exit. Recommendations are based respectively on the entry rule or on
+ * the exit rule.
  */
 public interface Strategy {
 
@@ -60,20 +59,22 @@ public interface Strategy {
     Strategy or(Strategy strategy);
 
     /**
-     * @param name           the name of the strategy
-     * @param strategy       the other strategy
-     * @param unstablePeriod number of bars that will be strip off for this strategy
+     * @param name         the name of the strategy
+     * @param strategy     the other strategy
+     * @param unstableBars the number of first bars in a bar series that this
+     *                     strategy ignores
      * @return the AND combination of two {@link Strategy strategies}
      */
-    Strategy and(String name, Strategy strategy, int unstablePeriod);
+    Strategy and(String name, Strategy strategy, int unstableBars);
 
     /**
-     * @param name           the name of the strategy
-     * @param strategy       the other strategy
-     * @param unstablePeriod number of bars that will be strip off for this strategy
+     * @param name         the name of the strategy
+     * @param strategy     the other strategy
+     * @param unstableBars the number of first bars in a bar series that this
+     *                     strategy ignores
      * @return the OR combination of two {@link Strategy strategies}
      */
-    Strategy or(String name, Strategy strategy, int unstablePeriod);
+    Strategy or(String name, Strategy strategy, int unstableBars);
 
     /**
      * @return the opposite of the {@link Strategy strategy}
@@ -81,15 +82,16 @@ public interface Strategy {
     Strategy opposite();
 
     /**
-     * @param unstablePeriod number of bars that will be strip off for this strategy
+     * @param unstableBars the number of first bars in a bar series that this
+     *                     strategy ignores
      */
-    void setUnstablePeriod(int unstablePeriod);
+    void setUnstableBars(int unstableBars);
 
     /**
-     * @return unstablePeriod number of bars that will be strip off for this
-     *         strategy
+     * @return unstableBars the number of first bars in a bar series that this
+     *         strategy ignores
      */
-    int getUnstablePeriod();
+    int getUnstableBars();
 
     /**
      * @param index a bar index
@@ -101,13 +103,13 @@ public interface Strategy {
     /**
      * @param index         the bar index
      * @param tradingRecord the potentially needed trading history
-     * @return true to recommend an order, false otherwise (no recommendation)
+     * @return true to recommend a trade, false otherwise (no recommendation)
      */
     default boolean shouldOperate(int index, TradingRecord tradingRecord) {
-        Trade trade = tradingRecord.getCurrentTrade();
-        if (trade.isNew()) {
+        Position position = tradingRecord.getCurrentPosition();
+        if (position.isNew()) {
             return shouldEnter(index, tradingRecord);
-        } else if (trade.isOpened()) {
+        } else if (position.isOpened()) {
             return shouldExit(index, tradingRecord);
         }
         return false;

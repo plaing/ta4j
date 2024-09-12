@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,6 +23,12 @@
  */
 package ta4jexamples.analysis;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -30,25 +36,21 @@ import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.ui.ApplicationFrame;
+import org.jfree.chart.ui.UIUtils;
 import org.jfree.data.time.Minute;
 import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.ui.ApplicationFrame;
-import org.jfree.ui.RefineryUtilities;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.BarSeriesManager;
 import org.ta4j.core.Indicator;
+import org.ta4j.core.Position;
 import org.ta4j.core.Strategy;
-import org.ta4j.core.Trade;
+import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.Num;
+
 import ta4jexamples.loaders.CsvTradesLoader;
 import ta4jexamples.strategies.MovingMomentumStrategy;
-
-import java.awt.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
 
 /**
  * This class builds a graphical chart showing the buy/sell signals of a
@@ -86,12 +88,12 @@ public class BuyAndSellSignalsToChart {
     private static void addBuySellSignals(BarSeries series, Strategy strategy, XYPlot plot) {
         // Running the strategy
         BarSeriesManager seriesManager = new BarSeriesManager(series);
-        List<Trade> trades = seriesManager.run(strategy).getTrades();
+        List<Position> positions = seriesManager.run(strategy).getPositions();
         // Adding markers to plot
-        for (Trade trade : trades) {
+        for (Position position : positions) {
             // Buy signal
             double buySignalBarTime = new Minute(
-                    Date.from(series.getBar(trade.getEntry().getIndex()).getEndTime().toInstant()))
+                    Date.from(series.getBar(position.getEntry().getIndex()).getEndTime().toInstant()))
                             .getFirstMillisecond();
             Marker buyMarker = new ValueMarker(buySignalBarTime);
             buyMarker.setPaint(Color.GREEN);
@@ -99,7 +101,7 @@ public class BuyAndSellSignalsToChart {
             plot.addDomainMarker(buyMarker);
             // Sell signal
             double sellSignalBarTime = new Minute(
-                    Date.from(series.getBar(trade.getExit().getIndex()).getEndTime().toInstant()))
+                    Date.from(series.getBar(position.getExit().getIndex()).getEndTime().toInstant()))
                             .getFirstMillisecond();
             Marker sellMarker = new ValueMarker(sellSignalBarTime);
             sellMarker.setPaint(Color.RED);
@@ -123,7 +125,7 @@ public class BuyAndSellSignalsToChart {
         ApplicationFrame frame = new ApplicationFrame("Ta4j example - Buy and sell signals to chart");
         frame.setContentPane(panel);
         frame.pack();
-        RefineryUtilities.centerFrameOnScreen(frame);
+        UIUtils.centerFrameOnScreen(frame);
         frame.setVisible(true);
     }
 

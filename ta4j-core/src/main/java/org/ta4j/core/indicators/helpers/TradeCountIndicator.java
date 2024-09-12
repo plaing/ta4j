@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -28,17 +28,29 @@ import org.ta4j.core.indicators.CachedIndicator;
 
 /**
  * Trade count indicator.
+ * 
+ * <p>
+ * Returns the number of trades of a bar.
  */
-public class TradeCountIndicator extends CachedIndicator<Integer> {
+public class TradeCountIndicator extends CachedIndicator<Long> {
 
-    private static final long serialVersionUID = -925772914642803594L;
-
+    /**
+     * Constructor.
+     * 
+     * @param series the bar series
+     */
     public TradeCountIndicator(BarSeries series) {
         super(series);
     }
 
     @Override
-    protected Integer calculate(int index) {
+    protected Long calculate(int index) {
         return getBarSeries().getBar(index).getTrades();
+    }
+
+    /** @return {@code 0} */
+    @Override
+    public int getUnstableBars() {
+        return 0;
     }
 }

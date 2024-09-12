@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,19 +23,27 @@
  */
 package ta4jexamples.strategies;
 
-import org.ta4j.core.*;
-import org.ta4j.core.indicators.SMAIndicator;
-import org.ta4j.core.indicators.UnstableIndicator;
-import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.num.Num;
-import org.ta4j.core.trading.rules.CrossedDownIndicatorRule;
-import org.ta4j.core.trading.rules.CrossedUpIndicatorRule;
-
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.BaseBar;
+import org.ta4j.core.BaseBarSeriesBuilder;
+import org.ta4j.core.BaseStrategy;
+import org.ta4j.core.Indicator;
+import org.ta4j.core.Rule;
+import org.ta4j.core.Strategy;
+import org.ta4j.core.TradingRecord;
+import org.ta4j.core.backtest.BarSeriesManager;
+import org.ta4j.core.indicators.SMAIndicator;
+import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
+import org.ta4j.core.indicators.helpers.UnstableIndicator;
+import org.ta4j.core.num.Num;
+import org.ta4j.core.rules.CrossedDownIndicatorRule;
+import org.ta4j.core.rules.CrossedUpIndicatorRule;
 
 public class UnstableIndicatorStrategy {
 
@@ -51,7 +59,7 @@ public class UnstableIndicatorStrategy {
         Rule exitRule = new CrossedDownIndicatorRule(close, sma);
 
         BaseStrategy strategy = new BaseStrategy(entryRule, exitRule);
-        strategy.setUnstablePeriod(3);
+        strategy.setUnstableBars(3);
         return strategy;
     }
 
@@ -72,8 +80,9 @@ public class UnstableIndicatorStrategy {
 
     public static void test(String name, Stream<Double> closePrices) {
         // Getting the bar series
-        BarSeries series = new BaseBarSeriesBuilder().withBars(
-                closePrices.map(close -> new BaseBar(MINUTE, TIME, 0, 0, 0, close, 0)).collect(Collectors.toList()))
+        BarSeries series = new BaseBarSeriesBuilder()
+                .withBars(closePrices.map(close -> new BaseBar(MINUTE, TIME, 0, 0, 0, close, 0))
+                        .collect(Collectors.toList()))
                 .build();
 
         // Building the trading strategy
@@ -83,7 +92,7 @@ public class UnstableIndicatorStrategy {
         BarSeriesManager seriesManager = new BarSeriesManager(series);
         TradingRecord tradingRecord = seriesManager.run(strategy);
 
-        System.out.println(name + " " + tradingRecord.getTrades());
+        System.out.println(name + " " + tradingRecord.getPositions());
     }
 
 }

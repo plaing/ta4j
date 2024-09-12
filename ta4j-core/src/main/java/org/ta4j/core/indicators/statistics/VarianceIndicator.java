@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -39,7 +39,7 @@ public class VarianceIndicator extends CachedIndicator<Num> {
 
     /**
      * Constructor.
-     * 
+     *
      * @param indicator the indicator
      * @param barCount  the time frame
      */
@@ -54,7 +54,7 @@ public class VarianceIndicator extends CachedIndicator<Num> {
     protected Num calculate(int index) {
         final int startIndex = Math.max(0, index - barCount + 1);
         final int numberOfObservations = index - startIndex + 1;
-        Num variance = numOf(0);
+        Num variance = zero();
         Num average = sma.getValue(index);
         for (int i = startIndex; i <= index; i++) {
             Num pow = indicator.getValue(i).minus(average).pow(2);
@@ -62,6 +62,11 @@ public class VarianceIndicator extends CachedIndicator<Num> {
         }
         variance = variance.dividedBy(numOf(numberOfObservations));
         return variance;
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return barCount;
     }
 
     @Override

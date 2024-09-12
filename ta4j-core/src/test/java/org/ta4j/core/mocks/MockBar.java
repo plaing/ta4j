@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,19 +23,21 @@
  */
 package org.ta4j.core.mocks;
 
-import org.ta4j.core.BaseBar;
-import org.ta4j.core.num.Num;
-
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.function.Function;
+
+import org.ta4j.core.BaseBar;
+import org.ta4j.core.num.Num;
 
 /**
  * A mock bar with sample data.
  */
 public class MockBar extends BaseBar {
 
-    private int trades = 0;
+    private static final long serialVersionUID = -4546486893163810212L;
+
+    private long trades = 0;
 
     public MockBar(double closePrice, Function<Number, Num> numFunction) {
         this(ZonedDateTime.now(), closePrice, numFunction);
@@ -66,13 +68,13 @@ public class MockBar extends BaseBar {
     }
 
     public MockBar(ZonedDateTime endTime, double openPrice, double closePrice, double highPrice, double lowPrice,
-            double amount, double volume, int trades, Function<Number, Num> numFunction) {
+            double amount, double volume, long trades, Function<Number, Num> numFunction) {
         super(Duration.ofDays(1), endTime, openPrice, highPrice, lowPrice, closePrice, volume, amount, 0, numFunction);
         this.trades = trades;
     }
 
     @Override
-    public int getTrades() {
+    public long getTrades() {
         return trades;
     }
 }

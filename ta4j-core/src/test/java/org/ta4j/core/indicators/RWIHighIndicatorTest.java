@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -41,7 +41,7 @@ public class RWIHighIndicatorTest extends AbstractIndicatorTest<BarSeries, Num> 
      * TODO: Just graphically Excel-Sheet validation with hard coded results. Excel
      * formula needed
      */
-    private ExternalIndicatorTest xls;
+    private final ExternalIndicatorTest xls;
 
     public RWIHighIndicatorTest(Function<Number, Num> numFunction) {
         super((data, params) -> new RWIHighIndicator(data, (int) params[0]), numFunction);

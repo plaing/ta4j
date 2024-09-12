@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -21,32 +21,9 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-/*
-  The MIT License (MIT)
-
-  Copyright (c) 2014-2018 Marc de Verdelhan, Ta4j Organization & respective authors (see AUTHORS)
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of
-  this software and associated documentation files (the "Software"), to deal in
-  the Software without restriction, including without limitation the rights to
-  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-  the Software, and to permit persons to whom the Software is furnished to do so,
-  subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package org.ta4j.core.num;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.ta4j.core.num.NaN.NaN;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -57,12 +34,13 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static org.ta4j.core.num.NaN.NaN;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Representation of arbitrary precision BigDecimal. A {@code Num} consists of a
- * {@code BigDecimal} with arbitrary {@link MathContext} (precision and rounding
- * mode).
+ * Representation of arbitrary precision {@link BigDecimal}. A {@code Num}
+ * consists of a {@code BigDecimal} with arbitrary {@link MathContext}
+ * (precision and rounding mode).
  *
  * @see BigDecimal
  * @see MathContext
@@ -71,15 +49,25 @@ import static org.ta4j.core.num.NaN.NaN;
  */
 public final class DecimalNum implements Num {
 
-    private static final long serialVersionUID = 785564782721079992L;
+    private static final long serialVersionUID = 1L;
 
     private static final int DEFAULT_PRECISION = 32;
     private static final Logger log = LoggerFactory.getLogger(DecimalNum.class);
+
+    public static final DecimalNum ZERO = DecimalNum.valueOf(0);
+    private static final DecimalNum ONE = DecimalNum.valueOf(1);
+    private static final DecimalNum HUNDRED = DecimalNum.valueOf(100);
+
     private final MathContext mathContext;
     private final BigDecimal delegate;
 
     /**
      * Constructor.
+     * 
+     * <p>
+     * Constructs the most precise {@code Num}, because it converts a {@code String}
+     * to a {@code Num} with a precision of {@link #DEFAULT_PRECISION}; only a
+     * string parameter can accurately represent a value.
      *
      * @param val the string representation of the Num value
      */
@@ -90,8 +78,12 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Constructor. Above double precision, only String parameters can represent the
-     * value.
+     * Constructor.
+     * 
+     * <p>
+     * Constructs a more precise {@code Num} than from {@code double}, because it
+     * converts a {@code String} to a {@code Num} with a precision of
+     * {@code precision}; only a string parameter can accurately represent a value.
      *
      * @param val       the string representation of the Num value
      * @param precision the int precision of the Num value
@@ -133,9 +125,15 @@ public final class DecimalNum implements Num {
 
     /**
      * Returns a {@code Num} version of the given {@code String}.
+     * 
+     * <p>
+     * Constructs the most precise {@code Num}, because it converts a {@code String}
+     * to a {@code Num} with a precision of {@link #DEFAULT_PRECISION}; only a
+     * string parameter can accurately represent a value.
      *
      * @param val the number
-     * @return the {@code Num}
+     * @return the {@code Num} with a precision of {@link #DEFAULT_PRECISION}
+     * @throws NumberFormatException if {@code val} is {@code "NaN"}
      */
     public static DecimalNum valueOf(String val) {
         if (val.equalsIgnoreCase("NAN")) {
@@ -145,12 +143,13 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns a {@code Num) version of the given {@code String} with a precision.
+     * Returns a {@code Num} version of the given {@code String} with a precision of
+     * {@code precision}.
      *
-     * @param val the number
-     * 
+     * @param val       the number
      * @param precision the precision
-     * @return the {@code Num}
+     * @return the {@code Num} with a precision of {@code precision}
+     * @throws NumberFormatException if {@code val} is {@code "NaN"}
      */
     public static DecimalNum valueOf(String val, int precision) {
         if (val.equalsIgnoreCase("NAN")) {
@@ -160,13 +159,37 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns a {@code Num} version of the given {@code short}.
+     * Returns a {@code Num} version of the given {@code Number}.
+     * 
+     * <p>
+     * Returns the most precise {@code Num}, because it first converts {@code val}
+     * to a {@code String} and then to a {@code Num} with a precision of
+     * {@link #DEFAULT_PRECISION}; only a string parameter can accurately represent
+     * a value.
      *
      * @param val the number
-     * @return the {@code Num}
+     * @return the {@code Num} with a precision of {@link #DEFAULT_PRECISION}
+     * @throws NumberFormatException if {@code val} is {@code "NaN"}
      */
-    public static DecimalNum valueOf(short val) {
-        return new DecimalNum(val);
+    public static DecimalNum valueOf(Number val) {
+        return valueOf(val.toString());
+    }
+
+    /**
+     * Returns a {@code DecimalNum} version of the given {@code DoubleNum}.
+     * 
+     * <p>
+     * Returns the most precise {@code Num}, because it first converts {@code val}
+     * to a {@code String} and then to a {@code Num} with a precision of
+     * {@link #DEFAULT_PRECISION}; only a string parameter can accurately represent
+     * a value.
+     *
+     * @param val the number
+     * @return the {@code Num} with a precision of {@link #DEFAULT_PRECISION}
+     * @throws NumberFormatException if {@code val} is {@code "NaN"}
+     */
+    public static DecimalNum valueOf(DoubleNum val) {
+        return valueOf(val.doubleValue());
     }
 
     /**
@@ -190,11 +213,25 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns a {@code Num} version of the given {@code float}. Using the float
-     * version could introduce inaccuracies.
+     * Returns a {@code Num} version of the given {@code short}.
      *
      * @param val the number
      * @return the {@code Num}
+     */
+    public static DecimalNum valueOf(short val) {
+        return new DecimalNum(val);
+    }
+
+    /**
+     * Returns a {@code Num} version of the given {@code float}.
+     *
+     * <p>
+     * <b>Warning:</b> The {@code Num} returned may have inaccuracies.
+     *
+     * @param val the number
+     * @return the {@code Num} whose value is equal to or approximately equal to the
+     *         value of {@code val}.
+     * @throws NumberFormatException if {@code val} is {@code Float.NaN}
      */
     public static DecimalNum valueOf(float val) {
         if (Float.isNaN(val)) {
@@ -203,20 +240,16 @@ public final class DecimalNum implements Num {
         return new DecimalNum(val);
     }
 
-    public static DecimalNum valueOf(BigDecimal val) {
-        return new DecimalNum(val, val.precision());
-    }
-
-    public static DecimalNum valueOf(BigDecimal val, int precision) {
-        return new DecimalNum(val, precision);
-    }
-
     /**
-     * Returns a {@code Num} version of the given {@code double}. Using the double
-     * version could introduce inaccuracies.
+     * Returns a {@code Num} version of the given {@code double}.
+     *
+     * <p>
+     * <b>Warning:</b> The {@code Num} returned may have inaccuracies.
      *
      * @param val the number
-     * @return the {@code Num}
+     * @return the {@code Num} whose value is equal to or approximately equal to the
+     *         value of {@code val}.
+     * @throws NumberFormatException if {@code val} is {@code Double.NaN}
      */
     public static DecimalNum valueOf(double val) {
         if (Double.isNaN(val)) {
@@ -226,24 +259,44 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns a {@code Num} version of the given {@code Num}.
+     * Returns a {@code Num} version of the given {@code BigDecimal}.
+     * 
+     * <p>
+     * <b>Warning:</b> The {@code Num} returned may have inaccuracies because it
+     * only inherits the precision of {@code val}.
      *
      * @param val the number
      * @return the {@code Num}
      */
-    public static DecimalNum valueOf(DecimalNum val) {
-        return val;
+    public static DecimalNum valueOf(BigDecimal val) {
+        return new DecimalNum(val, val.precision());
     }
 
     /**
-     * Returns a {@code Num} version of the given {@code Number}. Warning: This
-     * method turns the number into a string first
+     * Returns a {@code Num} version of the given {@code BigDecimal} with a
+     * precision of {@code precision}.
      *
-     * @param val the number
+     * @param val       the number
+     * @param precision the precision
      * @return the {@code Num}
      */
-    public static DecimalNum valueOf(Number val) {
-        return new DecimalNum(val.toString());
+    public static DecimalNum valueOf(BigDecimal val, int precision) {
+        return new DecimalNum(val, precision);
+    }
+
+    @Override
+    public Num zero() {
+        return mathContext.getPrecision() == DEFAULT_PRECISION ? ZERO : function().apply(0);
+    }
+
+    @Override
+    public Num one() {
+        return mathContext.getPrecision() == DEFAULT_PRECISION ? ONE : function().apply(1);
+    }
+
+    @Override
+    public Num hundred() {
+        return mathContext.getPrecision() == DEFAULT_PRECISION ? HUNDRED : function().apply(100);
     }
 
     @Override
@@ -251,8 +304,13 @@ public final class DecimalNum implements Num {
         return (number -> DecimalNum.valueOf(number.toString(), mathContext.getPrecision()));
     }
 
+    @Override
+    public String getName() {
+        return this.getClass().getSimpleName();
+    }
+
     /**
-     * Returns the underlying {@link BigDecimal} delegate
+     * Returns the underlying {@link BigDecimal} delegate.
      *
      * @return BigDecimal delegate instance of this instance
      */
@@ -262,7 +320,7 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns the underlying {@link MathContext} mathContext
+     * Returns the underlying {@link MathContext} mathContext.
      *
      * @return MathContext of this instance
      */
@@ -271,8 +329,8 @@ public final class DecimalNum implements Num {
     }
 
     @Override
-    public String getName() {
-        return this.getClass().getSimpleName();
+    public BigDecimal bigDecimalValue() {
+        return delegate;
     }
 
     @Override
@@ -290,8 +348,6 @@ public final class DecimalNum implements Num {
      * Returns a {@code Num} whose value is {@code (this - augend)}, with rounding
      * according to the context settings.
      *
-     * @param subtrahend value to be subtracted from this {@code Num}.
-     * @return {@code this - subtrahend}, rounded as necessary
      * @see BigDecimal#subtract(java.math.BigDecimal, java.math.MathContext)
      */
     @Override
@@ -309,8 +365,6 @@ public final class DecimalNum implements Num {
      * Returns a {@code Num} whose value is {@code this * multiplicand}, with
      * rounding according to the context settings.
      *
-     * @param multiplicand value to be multiplied by this {@code Num}.
-     * @return {@code this * multiplicand}, rounded as necessary
      * @see BigDecimal#multiply(java.math.BigDecimal, java.math.MathContext)
      */
     @Override
@@ -328,8 +382,6 @@ public final class DecimalNum implements Num {
      * Returns a {@code Num} whose value is {@code (this / divisor)}, with rounding
      * according to the context settings.
      *
-     * @param divisor value by which this {@code Num} is to be divided.
-     * @return {@code this / divisor}, rounded as necessary
      * @see BigDecimal#divide(java.math.BigDecimal, java.math.MathContext)
      */
     @Override
@@ -347,35 +399,25 @@ public final class DecimalNum implements Num {
      * Returns a {@code Num} whose value is {@code (this % divisor)}, with rounding
      * according to the context settings.
      *
-     * @param divisor value by which this {@code Num} is to be divided.
-     * @return {@code this % divisor}, rounded as necessary.
      * @see BigDecimal#remainder(java.math.BigDecimal, java.math.MathContext)
      */
     @Override
     public Num remainder(Num divisor) {
+        if (divisor.isNaN()) {
+            return NaN;
+        }
         BigDecimal bigDecimal = ((DecimalNum) divisor).delegate;
         int precision = mathContext.getPrecision();
         BigDecimal result = delegate.remainder(bigDecimal, new MathContext(precision, RoundingMode.HALF_UP));
         return new DecimalNum(result, precision);
     }
 
-    /**
-     * Returns a {@code Num} whose value is rounded down to the nearest whole
-     * number.
-     *
-     * @return <code>this</code> to whole Num rounded down
-     */
     @Override
     public Num floor() {
         int precision = Math.max(mathContext.getPrecision(), DEFAULT_PRECISION);
         return new DecimalNum(delegate.setScale(0, RoundingMode.FLOOR), precision);
     }
 
-    /**
-     * Returns a {@code Num} whose value is rounded up to the nearest whole number.
-     *
-     * @return <code>this</code> to whole Num rounded up
-     */
     @Override
     public Num ceil() {
         int precision = Math.max(mathContext.getPrecision(), DEFAULT_PRECISION);
@@ -383,10 +425,6 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns a {@code Num} whose value is <code>(this<sup>n</sup>)</code>.
-     *
-     * @param n power to raise this {@code Num} to.
-     * @return <code>this<sup>n</sup></code>
      * @see BigDecimal#pow(int, java.math.MathContext)
      */
     @Override
@@ -397,22 +435,16 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns the correctly rounded positive square root of this {@code Num}. /!\
-     * Warning! Uses DEFAULT_PRECISION.
-     *
-     * @return the positive square root of {@code this}
+     * Returns a {@code Num} whose value is {@code √(this)} with {@code precision} =
+     * {@link #DEFAULT_PRECISION}.
+     * 
      * @see DecimalNum#sqrt(int)
      */
+    @Override
     public Num sqrt() {
         return sqrt(DEFAULT_PRECISION);
     }
 
-    /**
-     * Returns a {@code num} whose value is <code>√(this)</code>.
-     *
-     * @param precision to calculate.
-     * @return <code>this<sup>n</sup></code>
-     */
     @Override
     public Num sqrt(int precision) {
         log.trace("delegate {}", delegate);
@@ -420,7 +452,6 @@ public final class DecimalNum implements Num {
         switch (comparedToZero) {
         case -1:
             return NaN;
-
         case 0:
             return DecimalNum.valueOf(0);
         }
@@ -444,7 +475,9 @@ public final class DecimalNum implements Num {
                     : new BigDecimal(6);
             BigDecimal estimatedExponent = exponent.divide(new BigDecimal(2));
             String estimateString = String.format("%sE%s", estimatedMantissa, estimatedExponent);
-            log.trace("x[0] =~ sqrt({}...*10^{}) =~ {}", mantissa, exponent, estimateString);
+            if (log.isTraceEnabled()) {
+                log.trace("x[0] =~ sqrt({}...*10^{}) =~ {}", mantissa, exponent, estimateString);
+            }
             DecimalFormat format = new DecimalFormat();
             format.setParseBigDecimal(true);
             try {
@@ -482,12 +515,7 @@ public final class DecimalNum implements Num {
         return DecimalNum.valueOf(estimate, precision);
     }
 
-    /**
-     * Returns a {@code Num} whose value is the natural logarithm of this
-     * {@code Num}.
-     *
-     * @return {@code log(this)}
-     */
+    @Override
     public Num log() {
         // Algorithm: http://functions.wolfram.com/ElementaryFunctions/Log/10/
         // https://stackoverflow.com/a/6169691/6444586
@@ -518,72 +546,41 @@ public final class DecimalNum implements Num {
         return logx;
     }
 
-    /**
-     * Returns a {@code Num} whose value is the absolute value of this {@code Num}.
-     *
-     * @return {@code abs(this)}
-     */
     @Override
     public Num abs() {
         return new DecimalNum(delegate.abs(), mathContext.getPrecision());
     }
 
-    /**
-     * Checks if the value is zero.
-     *
-     * @return true if the value is zero, false otherwise
-     */
+    @Override
+    public Num negate() {
+        return new DecimalNum(delegate.negate(), mathContext.getPrecision());
+    }
+
     @Override
     public boolean isZero() {
         return delegate.signum() == 0;
     }
 
-    /**
-     * Checks if the value is greater than zero.
-     *
-     * @return true if the value is greater than zero, false otherwise
-     */
     @Override
     public boolean isPositive() {
         return delegate.signum() > 0;
     }
 
-    /**
-     * Checks if the value is zero or greater.
-     *
-     * @return true if the value is zero or greater, false otherwise
-     */
     @Override
     public boolean isPositiveOrZero() {
         return delegate.signum() >= 0;
     }
 
-    /**
-     * Checks if the value is less than zero.
-     *
-     * @return true if the value is less than zero, false otherwise
-     */
     @Override
     public boolean isNegative() {
         return delegate.signum() < 0;
     }
 
-    /**
-     * Checks if the value is zero or less.
-     *
-     * @return true if the value is zero or less, false otherwise
-     */
     @Override
     public boolean isNegativeOrZero() {
         return delegate.signum() <= 0;
     }
 
-    /**
-     * Checks if this value is equal to another.
-     *
-     * @param other the other value, not null
-     * @return true is this is greater than the specified value, false otherwise
-     */
     @Override
     public boolean isEqual(Num other) {
         return !other.isNaN() && compareTo(other) == 0;
@@ -594,7 +591,7 @@ public final class DecimalNum implements Num {
      *
      * @param other     the other value, not null
      * @param precision the int precision
-     * @return true is this matches the specified value to a precision, false
+     * @return true if this matches the specified value to a precision, false
      *         otherwise
      */
     public boolean matches(Num other, int precision) {
@@ -603,8 +600,10 @@ public final class DecimalNum implements Num {
         if (thisNum.toString().equals(otherNum.toString())) {
             return true;
         }
-        log.debug("{} from {} does not match", thisNum, this);
-        log.debug("{} from {} to precision {}", otherNum, other, precision);
+        if (log.isDebugEnabled()) {
+            log.debug("{} from {} does not match", thisNum, this);
+            log.debug("{} from {} to precision {}", otherNum, other, precision);
+        }
         return false;
     }
 
@@ -613,7 +612,7 @@ public final class DecimalNum implements Num {
      *
      * @param other the other value, not null
      * @param delta the {@link Num} offset
-     * @return true is this matches the specified value within an offset, false
+     * @return true if this matches the specified value within an offset, false
      *         otherwise
      */
     public boolean matches(Num other, Num delta) {
@@ -621,40 +620,23 @@ public final class DecimalNum implements Num {
         if (!result.isGreaterThan(delta)) {
             return true;
         }
-        log.debug("{} does not match", this);
-        log.debug("{} within offset {}", other, delta);
+        if (log.isDebugEnabled()) {
+            log.debug("{} does not match", this);
+            log.debug("{} within offset {}", other, delta);
+        }
         return false;
     }
 
-    /**
-     * Checks if this value is greater than another.
-     *
-     * @param other the other value, not null
-     * @return true is this is greater than the specified value, false otherwise
-     */
     @Override
     public boolean isGreaterThan(Num other) {
         return !other.isNaN() && compareTo(other) > 0;
     }
 
-    /**
-     * Checks if this value is greater than or equal to another.
-     *
-     * @param other the other value, not null
-     * @return true is this is greater than or equal to the specified value, false
-     *         otherwise
-     */
     @Override
     public boolean isGreaterThanOrEqual(Num other) {
         return !other.isNaN() && compareTo(other) > -1;
     }
 
-    /**
-     * Checks if this value is less than another.
-     *
-     * @param other the other value, not null
-     * @return true is this is less than the specified value, false otherwise
-     */
     @Override
     public boolean isLessThan(Num other) {
         return !other.isNaN() && compareTo(other) < 0;
@@ -671,10 +653,7 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns the minimum of this {@code Num} and {@code other}.
-     *
-     * @param other value with which the minimum is to be computed
-     * @return the {@code Num} whose value is the lesser of this {@code Num} and
+     * @return the {@code Num} whose value is the smaller of this {@code Num} and
      *         {@code other}. If they are equal, as defined by the
      *         {@link #compareTo(Num) compareTo} method, {@code this} is returned.
      */
@@ -684,9 +663,6 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * Returns the maximum of this {@code Num} and {@code other}.
-     *
-     * @param other value with which the maximum is to be computed
      * @return the {@code Num} whose value is the greater of this {@code Num} and
      *         {@code other}. If they are equal, as defined by the
      *         {@link #compareTo(Num) compareTo} method, {@code this} is returned.
@@ -702,8 +678,12 @@ public final class DecimalNum implements Num {
     }
 
     /**
-     * {@inheritDoc} Warning: This method returns true if `this` and `obj` are both
-     * NaN.NaN.
+     * <b>Warning:</b> This method returns {@code true} if {@code this} and
+     * {@code obj} are both {@link NaN#NaN}.
+     * 
+     * @return true if {@code this} object is the same as the {@code obj} argument,
+     *         as defined by the {@link #compareTo(Num) compareTo} method; false
+     *         otherwise.
      */
     @Override
     public boolean equals(Object obj) {
@@ -730,7 +710,7 @@ public final class DecimalNum implements Num {
         // a is a whole number (make sure it doesn't overflow int)
         // remainder 0 <= b < 1
         // So:
-        // x^a uses PrecisionNum ((PrecisionNum) x).pow(int a) cannot overflow Num
+        // x^a uses DecimalNum ((DecimalNum) x).pow(int a) cannot overflow Num
         // x^b uses double Math.pow(double x, double b) cannot overflow double because b
         // < 1.
         // As suggested: https://stackoverflow.com/a/3590314

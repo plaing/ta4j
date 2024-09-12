@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,8 +23,6 @@
  */
 package org.ta4j.core;
 
-import org.ta4j.core.num.Num;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -33,15 +31,18 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Function;
 
+import org.ta4j.core.num.Num;
+
 /**
- * Sequence of {@link Bar bars} separated by a predefined period (e.g. 15
- * minutes, 1 day, etc.)
- *
- * Notably, a {@link BarSeries bar series} can be:
+ * A {@code BarSeries} is a sequence of {@link Bar bars} separated by a
+ * predefined period (e.g. 15 minutes, 1 day, etc.).
+ * 
+ * Notably, it can be:
+ * 
  * <ul>
  * <li>the base of {@link Indicator indicator} calculations
- * <li>constrained between begin and end indexes (e.g. for some backtesting
- * cases)
+ * <li>constrained between beginning and ending indices (e.g. for some
+ * backtesting cases)
  * <li>limited to a fixed number of bars (e.g. for actual trading)
  * </ul>
  */
@@ -53,7 +54,64 @@ public interface BarSeries extends Serializable {
     String getName();
 
     /**
-     * @param i an index
+     * @return any instance of Num to determine its Num type and function.
+     */
+    Num num();
+
+    /**
+     * Returns the underlying function to transform a Number into the Num
+     * implementation used by this bar series
+     *
+     * @return a function Number -> Num
+     */
+    default Function<Number, Num> function() {
+        return num().function();
+    }
+
+    /**
+     * @return the Num of 0
+     */
+    default Num zero() {
+        return num().zero();
+    }
+
+    /**
+     * @return the Num of 1
+     */
+    default Num one() {
+        return num().one();
+    }
+
+    /**
+     * @return the Num of 100
+     */
+    default Num hundred() {
+        return num().hundred();
+    }
+
+    /**
+     * Transforms a {@link Number} into the {@link Num implementation} used by this
+     * bar series
+     *
+     * @param number a {@link Number} implementing object.
+     * @return the corresponding value as a Num implementing object
+     */
+    default Num numOf(Number number) {
+        return num().function().apply(number);
+    }
+
+    /**
+     * Gets the bar from {@link #getBarData()} with index {@code i}.
+     * 
+     * <p>
+     * The given {@code i} can return the same bar within the first range of indices
+     * due to {@link #setMaximumBarCount(int)}, for example: If you fill a BarSeries
+     * with 30 bars and then apply a {@code maximumBarCount} of 10 bars, the first
+     * 20 bars will be removed from the BarSeries. The indices going further from 0
+     * to 29 remain but return the same bar from 0 to 20. The remaining 9 bars are
+     * returned from index 21.
+     * 
+     * @param i the index
      * @return the bar at the i-th position
      */
     Bar getBar(int i);
@@ -85,12 +143,16 @@ public interface BarSeries extends Serializable {
     }
 
     /**
-     * Warning: should be used carefully!
+     * Returns the raw bar data, i.e. it returns the current list object, which is
+     * used internally to store the {@link Bar bars}. It may be:
      *
-     * Returns the raw bar data. It means that it returns the current List object
-     * used internally to store the {@link Bar bars}. It may be: - a shortened bar
-     * list if a maximum bar count has been set - an extended bar list if it is a
-     * constrained bar series
+     * <ul>
+     * <li>a shortened bar list if a {@code maximumBarCount} has been set.
+     * <li>an extended bar list if it is a constrained bar series.
+     * </ul>
+     * 
+     * <p>
+     * <b>Warning:</b> This method should be used carefully!
      *
      * @return the raw bar data
      */
@@ -115,7 +177,8 @@ public interface BarSeries extends Serializable {
         if (!getBarData().isEmpty()) {
             Bar firstBar = getFirstBar();
             Bar lastBar = getLastBar();
-            sb.append(firstBar.getEndTime().format(DateTimeFormatter.ISO_DATE_TIME)).append(" - ")
+            sb.append(firstBar.getEndTime().format(DateTimeFormatter.ISO_DATE_TIME))
+                    .append(" - ")
                     .append(lastBar.getEndTime().format(DateTimeFormatter.ISO_DATE_TIME));
         }
         return sb.toString();
@@ -131,8 +194,9 @@ public interface BarSeries extends Serializable {
      *
      * If a new bar is added to the series such that the number of bars will exceed
      * the maximum bar count, then the FIRST bar in the series is automatically
-     * removed, ensuring that the maximum bar count is not exceeded.
-     *
+     * removed, ensuring that the maximum bar count is not exceeded. The indices of
+     * the bar series do not change.
+     * 
      * @param maximumBarCount the maximum bar count
      */
     void setMaximumBarCount(int maximumBarCount);
@@ -143,16 +207,17 @@ public interface BarSeries extends Serializable {
     int getRemovedBarsCount();
 
     /**
-     * Adds a bar at the end of the series.
+     * Adds the {@code bar} at the end of the series.
      *
-     * Begin index set to 0 if it wasn't initialized.<br>
-     * End index set to 0 if it wasn't initialized, or incremented if it matches the
-     * end of the series.<br>
+     * <p>
+     * The {@code beginIndex} is set to {@code 0} if not already initialized.<br>
+     * The {@code endIndex} is set to {@code 0} if not already initialized, or
+     * incremented if it matches the end of the series.<br>
      * Exceeding bars are removed.
      *
      * @param bar the bar to be added
-     * @apiNote use #addBar(Duration, ZonedDateTime, Num, Num, Num, Num, Num) to add
-     *          bar data directly
+     * @apiNote to add bar data directly you can use
+     *          {@link #addBar(Duration, ZonedDateTime, Num, Num, Num, Num, Num)}
      * @see BarSeries#setMaximumBarCount(int)
      */
     default void addBar(Bar bar) {
@@ -160,34 +225,43 @@ public interface BarSeries extends Serializable {
     }
 
     /**
-     * Adds a bar at the end of the series.
+     * Adds the {@code bar} at the end of the series.
      *
-     * Begin index set to 0 if it wasn't initialized.<br>
-     * End index set to 0 if it wasn't initialized, or incremented if it matches the
-     * end of the series.<br>
+     * <p>
+     * The {@code beginIndex} is set to {@code 0} if not already initialized.<br>
+     * The {@code endIndex} is set to {@code 0} if not already initialized, or
+     * incremented if it matches the end of the series.<br>
      * Exceeding bars are removed.
      *
      * @param bar     the bar to be added
-     * @param replace true to replace the latest bar. Some exchange provide
-     *                continuous new bar data in the time period. (eg. 1s in 1m
-     *                Duration)<br>
-     * @apiNote use #addBar(Duration, ZonedDateTime, Num, Num, Num, Num, Num) to add
-     *          bar data directly
+     * @param replace true to replace the latest bar. Some exchanges continuously
+     *                provide new bar data in the respective period, e.g. 1 second
+     *                in 1 minute duration.
+     * @apiNote to add bar data directly you can use
+     *          {@link #addBar(Duration, ZonedDateTime, Num, Num, Num, Num, Num)}
      * @see BarSeries#setMaximumBarCount(int)
      */
     void addBar(Bar bar, boolean replace);
 
     /**
-     * Adds a bar at the end of the series.
+     * Adds the {@code bar} at the end of the series.
+     * 
+     * <p>
+     * The {@code beginIndex} is set to {@code 0} if not already initialized.<br>
+     * The {@code endIndex} is set to {@code 0} if not already initialized, or
+     * incremented if it matches the end of the series.<br>
+     * Exceeding bars are removed.
      *
      * @param timePeriod the {@link Duration} of this bar
      * @param endTime    the {@link ZonedDateTime end time} of this bar
+     * @apiNote to add bar data directly you can use
+     *          {@link #addBar(Duration, ZonedDateTime, Num, Num, Num, Num, Num)}
+     * @see BarSeries#setMaximumBarCount(int)
      */
     void addBar(Duration timePeriod, ZonedDateTime endTime);
 
     default void addBar(ZonedDateTime endTime, Number openPrice, Number highPrice, Number lowPrice, Number closePrice) {
-        this.addBar(endTime, numOf(openPrice), numOf(highPrice), numOf(lowPrice), numOf(closePrice), numOf(0),
-                numOf(0));
+        this.addBar(endTime, numOf(openPrice), numOf(highPrice), numOf(lowPrice), numOf(closePrice), zero(), zero());
     }
 
     default void addBar(ZonedDateTime endTime, Number openPrice, Number highPrice, Number lowPrice, Number closePrice,
@@ -204,7 +278,7 @@ public interface BarSeries extends Serializable {
     default void addBar(Duration timePeriod, ZonedDateTime endTime, Number openPrice, Number highPrice, Number lowPrice,
             Number closePrice, Number volume) {
         this.addBar(timePeriod, endTime, numOf(openPrice), numOf(highPrice), numOf(lowPrice), numOf(closePrice),
-                numOf(volume), numOf(0));
+                numOf(volume), zero());
     }
 
     default void addBar(Duration timePeriod, ZonedDateTime endTime, Number openPrice, Number highPrice, Number lowPrice,
@@ -215,14 +289,14 @@ public interface BarSeries extends Serializable {
 
     default void addBar(ZonedDateTime endTime, String openPrice, String highPrice, String lowPrice, String closePrice) {
         this.addBar(endTime, numOf(new BigDecimal(openPrice)), numOf(new BigDecimal(highPrice)),
-                numOf(new BigDecimal(lowPrice)), numOf(new BigDecimal(closePrice)), numOf(0), numOf(0));
+                numOf(new BigDecimal(lowPrice)), numOf(new BigDecimal(closePrice)), zero(), zero());
     }
 
     default void addBar(ZonedDateTime endTime, String openPrice, String highPrice, String lowPrice, String closePrice,
             String volume) {
         this.addBar(endTime, numOf(new BigDecimal(openPrice)), numOf(new BigDecimal(highPrice)),
                 numOf(new BigDecimal(lowPrice)), numOf(new BigDecimal(closePrice)), numOf(new BigDecimal(volume)),
-                numOf(0));
+                zero());
     }
 
     default void addBar(ZonedDateTime endTime, String openPrice, String highPrice, String lowPrice, String closePrice,
@@ -233,11 +307,11 @@ public interface BarSeries extends Serializable {
     }
 
     default void addBar(ZonedDateTime endTime, Num openPrice, Num highPrice, Num lowPrice, Num closePrice, Num volume) {
-        this.addBar(endTime, openPrice, highPrice, lowPrice, closePrice, volume, numOf(0));
+        this.addBar(endTime, openPrice, highPrice, lowPrice, closePrice, volume, zero());
     }
 
     /**
-     * Adds a new <code>Bar</code> to the bar series.
+     * Adds a new {@code Bar} to the bar series.
      *
      * @param endTime    end time of the bar
      * @param openPrice  the open price
@@ -251,7 +325,7 @@ public interface BarSeries extends Serializable {
             Num amount);
 
     /**
-     * Adds a new <code>Bar</code> to the bar series.
+     * Adds a new {@code Bar} to the bar series.
      *
      * @param endTime    end time of the bar
      * @param openPrice  the open price
@@ -264,7 +338,7 @@ public interface BarSeries extends Serializable {
             Num volume);
 
     /**
-     * Adds a new <code>Bar</code> to the bar series.
+     * Adds a new {@code Bar} to the bar series.
      *
      * @param timePeriod the time period of the bar
      * @param endTime    end time of the bar
@@ -279,58 +353,77 @@ public interface BarSeries extends Serializable {
             Num volume, Num amount);
 
     /**
-     * Adds a trade at the end of bar period.
+     * Adds a trade and updates the close price of the last bar.
      *
      * @param tradeVolume the traded volume
      * @param tradePrice  the price
+     * @see Bar#addTrade(Num, Num)
      */
     default void addTrade(Number tradeVolume, Number tradePrice) {
         addTrade(numOf(tradeVolume), numOf(tradePrice));
     }
 
     /**
-     * Adds a trade at the end of bar period.
+     * Adds a trade and updates the close price of the last bar.
      *
      * @param tradeVolume the traded volume
      * @param tradePrice  the price
+     * @see Bar#addTrade(Num, Num)
      */
     default void addTrade(String tradeVolume, String tradePrice) {
         addTrade(numOf(new BigDecimal(tradeVolume)), numOf(new BigDecimal(tradePrice)));
     }
 
     /**
-     * Adds a trade at the end of bar period.
+     * Adds a trade and updates the close price of the last bar.
      *
      * @param tradeVolume the traded volume
      * @param tradePrice  the price
+     * @see Bar#addTrade(Num, Num)
      */
     void addTrade(Num tradeVolume, Num tradePrice);
 
     /**
-     * Adds a price to the last bar
+     * Updates the close price of the last bar. The open, high and low prices are
+     * also updated as needed.
      *
      * @param price the price for the bar
+     * @see Bar#addPrice(Num)
      */
     void addPrice(Num price);
 
+    /**
+     * Updates the close price of the last bar. The open, high and low prices are
+     * also updated as needed.
+     *
+     * @param price the price for the bar
+     * @see Bar#addPrice(Num)
+     */
     default void addPrice(String price) {
         addPrice(new BigDecimal(price));
     }
 
+    /**
+     * Updates the close price of the last bar. The open, high and low prices are
+     * also updated as needed.
+     *
+     * @param price the price for the bar
+     * @see Bar#addPrice(Num)
+     */
     default void addPrice(Number price) {
         addPrice(numOf(price));
     }
 
     /**
-     * Returns a new {@link BarSeries} instance that is a subset of this BarSeries
-     * instance. It holds a copy of all {@link Bar bars} between <tt>startIndex</tt>
-     * (inclusive) and <tt>endIndex</tt> (exclusive) of this BarSeries. The indices
-     * of this BarSeries and the new subset BarSeries can be different. I. e. index
-     * 0 of the new BarSeries will be index <tt>startIndex</tt> of this BarSeries.
-     * If <tt>startIndex</tt> < this.seriesBeginIndex the new BarSeries will start
-     * with the first available Bar of this BarSeries. If <tt>endIndex</tt> >
-     * this.seriesEndIndex the new BarSeries will end at the last available Bar of
-     * this BarSeries
+     * Returns a new {@link BarSeries} instance (= "subseries") that is a subset of
+     * {@code this} BarSeries instance. It contains a copy of all {@link Bar bars}
+     * between {@code startIndex} (inclusive) and {@code endIndex} (exclusive) of
+     * {@code this} instance. The indices of {@code this} and its subseries can be
+     * different, i. e. index 0 of the subseries will be the {@code startIndex} of
+     * {@code this}. If {@code startIndex} < this.seriesBeginIndex, then the
+     * subseries will start with the first available bar of {@code this}. If
+     * {@code endIndex} > this.seriesEndIndex, then the subseries will end at the
+     * last available bar of {@code this}.
      *
      * @param startIndex the startIndex (inclusive)
      * @param endIndex   the endIndex (exclusive)
@@ -338,22 +431,5 @@ public interface BarSeries extends Serializable {
      * @throws IllegalArgumentException if endIndex <= startIndex or startIndex < 0
      */
     BarSeries getSubSeries(int startIndex, int endIndex);
-
-    /**
-     * Transforms a {@link Number} into the {@link Num implementation} used by this
-     * bar series
-     *
-     * @param number a {@link Number} implementing object.
-     * @return the corresponding value as a Num implementing object
-     */
-    Num numOf(Number number);
-
-    /**
-     * Returns the underlying function to transform a Number into the Num
-     * implementation used by this bar series
-     *
-     * @return a function Number -> Num
-     */
-    Function<Number, Num> function();
 
 }

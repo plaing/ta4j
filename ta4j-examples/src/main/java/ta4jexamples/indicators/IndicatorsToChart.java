@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,15 +23,18 @@
  */
 package ta4jexamples.indicators;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.ui.ApplicationFrame;
+import org.jfree.chart.ui.UIUtils;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.ui.ApplicationFrame;
-import org.jfree.ui.RefineryUtilities;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
@@ -42,10 +45,8 @@ import org.ta4j.core.indicators.bollinger.BollingerBandsUpperIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.indicators.statistics.StandardDeviationIndicator;
 import org.ta4j.core.num.Num;
-import ta4jexamples.loaders.CsvBarsLoader;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import ta4jexamples.loaders.CsvBarsLoader;
 
 /**
  * This class builds a graphical chart showing values from indicators.
@@ -85,7 +86,7 @@ public class IndicatorsToChart {
         ApplicationFrame frame = new ApplicationFrame("Ta4j example - Indicators to chart");
         frame.setContentPane(panel);
         frame.pack();
-        RefineryUtilities.centerFrameOnScreen(frame);
+        UIUtils.centerFrameOnScreen(frame);
         frame.setVisible(true);
     }
 

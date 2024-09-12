@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,17 +23,16 @@
  */
 package org.ta4j.core.mocks;
 
+import java.util.List;
+
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.num.Num;
 
-import java.util.List;
-
 public class MockIndicator implements Indicator<Num> {
 
-    private static final long serialVersionUID = -1083818948051189894L;
-    private BarSeries series;
-    private List<Num> values;
+    private final BarSeries series;
+    private final List<Num> values;
 
     /**
      * Constructor.
@@ -52,8 +51,14 @@ public class MockIndicator implements Indicator<Num> {
      * @param index Indicator value to get
      * @return Num Indicator value at index
      */
+    @Override
     public Num getValue(int index) {
         return values.get(index);
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return 0;
     }
 
     /**
@@ -61,6 +66,7 @@ public class MockIndicator implements Indicator<Num> {
      * 
      * @return TimeSeries of the Indicator
      */
+    @Override
     public BarSeries getBarSeries() {
         return series;
     }

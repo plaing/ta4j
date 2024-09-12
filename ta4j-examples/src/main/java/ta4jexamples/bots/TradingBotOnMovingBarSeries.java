@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,24 +23,25 @@
  */
 package ta4jexamples.bots;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
+
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBar;
 import org.ta4j.core.BaseStrategy;
 import org.ta4j.core.BaseTradingRecord;
-import org.ta4j.core.Order;
 import org.ta4j.core.Strategy;
+import org.ta4j.core.Trade;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.indicators.SMAIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.num.Num;
 import org.ta4j.core.num.DecimalNum;
-import org.ta4j.core.trading.rules.OverIndicatorRule;
-import org.ta4j.core.trading.rules.UnderIndicatorRule;
-import ta4jexamples.loaders.CsvTradesLoader;
+import org.ta4j.core.num.Num;
+import org.ta4j.core.rules.OverIndicatorRule;
+import org.ta4j.core.rules.UnderIndicatorRule;
 
-import java.time.Duration;
-import java.time.ZonedDateTime;
+import ta4jexamples.loaders.CsvTradesLoader;
 
 /**
  * This class is an example of a dummy trading bot using ta4j.
@@ -153,7 +154,7 @@ public class TradingBotOnMovingBarSeries {
                 System.out.println("Strategy should ENTER on " + endIndex);
                 boolean entered = tradingRecord.enter(endIndex, newBar.getClosePrice(), DecimalNum.valueOf(10));
                 if (entered) {
-                    Order entry = tradingRecord.getLastEntry();
+                    Trade entry = tradingRecord.getLastEntry();
                     System.out.println("Entered on " + entry.getIndex() + " (price=" + entry.getNetPrice().doubleValue()
                             + ", amount=" + entry.getAmount().doubleValue() + ")");
                 }
@@ -162,7 +163,7 @@ public class TradingBotOnMovingBarSeries {
                 System.out.println("Strategy should EXIT on " + endIndex);
                 boolean exited = tradingRecord.exit(endIndex, newBar.getClosePrice(), DecimalNum.valueOf(10));
                 if (exited) {
-                    Order exit = tradingRecord.getLastExit();
+                    Trade exit = tradingRecord.getLastExit();
                     System.out.println("Exited on " + exit.getIndex() + " (price=" + exit.getNetPrice().doubleValue()
                             + ", amount=" + exit.getAmount().doubleValue() + ")");
                 }

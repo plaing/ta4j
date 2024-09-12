@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,6 +23,11 @@
  */
 package org.ta4j.core.indicators.statistics;
 
+import static org.junit.Assert.assertTrue;
+import static org.ta4j.core.TestUtils.assertNumEquals;
+
+import java.util.function.Function;
+
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,11 +36,6 @@ import org.ta4j.core.indicators.AbstractIndicatorTest;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.mocks.MockBarSeries;
 import org.ta4j.core.num.Num;
-
-import java.util.function.Function;
-
-import static org.junit.Assert.assertTrue;
-import static org.ta4j.core.TestUtils.assertNumEquals;
 
 public class SimpleLinearRegressionIndicatorTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
 
@@ -47,7 +47,7 @@ public class SimpleLinearRegressionIndicatorTest extends AbstractIndicatorTest<I
 
     @Before
     public void setUp() {
-        double[] data = new double[] { 10, 20, 30, 40, 30, 40, 30, 20, 30, 50, 60, 70, 80 };
+        double[] data = { 10, 20, 30, 40, 30, 40, 30, 20, 30, 50, 60, 70, 80 };
         closePrice = new ClosePriceIndicator(new MockBarSeries(numFunction, data));
     }
 
@@ -99,7 +99,7 @@ public class SimpleLinearRegressionIndicatorTest extends AbstractIndicatorTest<I
 
     @Test
     public void calculateLinearRegression() {
-        double[] values = new double[] { 1, 2, 1.3, 3.75, 2.25 };
+        double[] values = { 1, 2, 1.3, 3.75, 2.25 };
         ClosePriceIndicator indicator = new ClosePriceIndicator(new MockBarSeries(numFunction, values));
         SimpleLinearRegressionIndicator reg = new SimpleLinearRegressionIndicator(indicator, 5);
 

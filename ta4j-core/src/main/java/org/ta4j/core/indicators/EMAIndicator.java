@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -34,8 +34,6 @@ import org.ta4j.core.num.Num;
  */
 public class EMAIndicator extends AbstractEMAIndicator {
 
-    private static final long serialVersionUID = -3739171856534680816L;
-
     /**
      * Constructor.
      *
@@ -44,5 +42,10 @@ public class EMAIndicator extends AbstractEMAIndicator {
      */
     public EMAIndicator(Indicator<Num> indicator, int barCount) {
         super(indicator, barCount, (2.0 / (barCount + 1)));
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return getBarCount();
     }
 }

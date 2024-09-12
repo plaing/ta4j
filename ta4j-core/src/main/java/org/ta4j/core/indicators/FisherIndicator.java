@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,8 +23,8 @@
  */
 package org.ta4j.core.indicators;
 
-import org.ta4j.core.Indicator;
 import org.ta4j.core.BarSeries;
+import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.helpers.HighPriceIndicator;
 import org.ta4j.core.indicators.helpers.HighestValueIndicator;
 import org.ta4j.core.indicators.helpers.LowPriceIndicator;
@@ -46,8 +46,6 @@ import org.ta4j.core.num.Num;
  */
 public class FisherIndicator extends RecursiveCachedIndicator<Num> {
 
-    private static final long serialVersionUID = 4622250625267906228L;
-
     private static final double ZERO_DOT_FIVE = 0.5;
     private static final double VALUE_MAX = 0.999;
     private static final double VALUE_MIN = -0.999;
@@ -57,6 +55,7 @@ public class FisherIndicator extends RecursiveCachedIndicator<Num> {
     private final Num densityFactor;
     private final Num gamma;
     private final Num delta;
+    private final Num one;
 
     /**
      * Constructor.
@@ -83,7 +82,7 @@ public class FisherIndicator extends RecursiveCachedIndicator<Num> {
      * @param price    the price indicator (usually {@link MedianPriceIndicator})
      * @param barCount the time frame (usually 10)
      * @param alpha    the alpha (usually 0.33 or 0.5)
-     * @param beta     the beta (usually 0.67 0.5 or)
+     * @param beta     the beta (usually 0.67 or 0.5)
      */
     public FisherIndicator(Indicator<Num> price, int barCount, double alpha, double beta) {
         this(price, barCount, alpha, beta, ZERO_DOT_FIVE, ZERO_DOT_FIVE, 1, true);
@@ -145,6 +144,7 @@ public class FisherIndicator extends RecursiveCachedIndicator<Num> {
         this.gamma = numOf(gammaD);
         this.delta = numOf(deltaD);
         this.densityFactor = numOf(densityFactorD);
+        this.one = one();
 
         Num alpha = numOf(alphaD);
         Num beta = numOf(betaD);
@@ -153,14 +153,12 @@ public class FisherIndicator extends RecursiveCachedIndicator<Num> {
         final Indicator<Num> periodLow = new LowestValueIndicator(
                 isPriceIndicator ? new LowPriceIndicator(ref.getBarSeries()) : ref, barCount);
 
-        intermediateValue = new RecursiveCachedIndicator<Num>(ref) {
-
-            private static final long serialVersionUID = 1242564751445450654L;
+        this.intermediateValue = new RecursiveCachedIndicator<Num>(ref) {
 
             @Override
             protected Num calculate(int index) {
                 if (index <= 0) {
-                    return numOf(0);
+                    return zero();
                 }
 
                 // Value = (alpha * 2 * ((ref - MinL) / (MaxH - MinL) - 0.5) + beta *
@@ -173,13 +171,18 @@ public class FisherIndicator extends RecursiveCachedIndicator<Num> {
                 Num term3 = term2.plus(beta.multipliedBy(getValue(index - 1)));
                 return term3.dividedBy(FisherIndicator.this.densityFactor);
             }
+
+            @Override
+            public int getUnstableBars() {
+                return 0;
+            }
         };
     }
 
     @Override
     protected Num calculate(int index) {
         if (index <= 0) {
-            return numOf(0);
+            return zero();
         }
 
         Num value = intermediateValue.getValue(index);
@@ -191,9 +194,14 @@ public class FisherIndicator extends RecursiveCachedIndicator<Num> {
         }
 
         // Fisher = gamma * Log((1 + Value) / (1 - Value)) + delta * priorFisher
-        Num term1 = numOf((Math.log(numOf(1).plus(value).dividedBy(numOf(1).minus(value)).doubleValue())));
+        Num term1 = numOf((Math.log(one.plus(value).dividedBy(one.minus(value)).doubleValue())));
         Num term2 = getValue(index - 1);
         return gamma.multipliedBy(term1).plus(delta.multipliedBy(term2));
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return 0;
     }
 
 }

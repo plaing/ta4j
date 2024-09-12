@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,17 +23,20 @@
  */
 package org.ta4j.core;
 
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
 import org.ta4j.core.num.Num;
 
-import java.io.Serializable;
-
 /**
- * Indicator over a {@link BarSeries bar series}. <p/p> For each index of the
- * bar series, returns a value of type <b>T</b>.
+ * Indicator over a {@link BarSeries bar series}.
+ * 
+ * <p>
+ * Returns a value of type <b>T</b> for each index of the bar series.
  *
- * @param <T> the type of returned value (Double, Boolean, etc.)
+ * @param <T> the type of the returned value (Double, Boolean, etc.)
  */
-public interface Indicator<T> extends Serializable {
+public interface Indicator<T> {
 
     /**
      * @param index the bar index
@@ -42,36 +45,71 @@ public interface Indicator<T> extends Serializable {
     T getValue(int index);
 
     /**
+     * Returns the number of bars up to which {@code this} Indicator calculates
+     * wrong values.
+     * 
+     * @return unstable bars
+     */
+    int getUnstableBars();
+
+    /**
      * @return the related bar series
      */
     BarSeries getBarSeries();
 
     /**
-     * @return the {@link Num Num extending class} for the given {@link Number}
+     * @return the Num of 0
      */
-    Num numOf(Number number);
+    default Num zero() {
+        return getBarSeries().zero();
+    }
 
     /**
-     * Returns all values from an {@link Indicator} as an array of Doubles. The
-     * returned doubles could have a minor loss of precise, if {@link Indicator} was
-     * based on {@link Num Num}.
+     * @return the Num of 1
+     */
+    default Num one() {
+        return getBarSeries().one();
+    }
+
+    /**
+     * @return the Num of 100
+     */
+    default Num hundred() {
+        return getBarSeries().hundred();
+    }
+
+    /**
+     * @return the {@link Num Num extending class} for the given {@link Number}
+     */
+    default Num numOf(Number number) {
+        return getBarSeries().numOf(number);
+    }
+
+    /**
+     * @return all values from {@code this} Indicator over {@link #getBarSeries()}
+     *         as a Stream
+     */
+    default Stream<T> stream() {
+        return IntStream.range(getBarSeries().getBeginIndex(), getBarSeries().getEndIndex() + 1)
+                .mapToObj(this::getValue);
+    }
+
+    /**
+     * Returns all values of an {@link Indicator} within the given {@code index} and
+     * {@code barCount} as an array of Doubles. The returned doubles could have a
+     * minor loss of precision, if {@link Indicator} was based on {@link Num Num}.
      *
      * @param ref      the indicator
      * @param index    the index
      * @param barCount the barCount
-     * @return array of Doubles within the barCount
+     * @return array of Doubles within {@code index} and {@code barCount}
      */
     static Double[] toDouble(Indicator<Num> ref, int index, int barCount) {
-
-        Double[] all = new Double[barCount];
-
         int startIndex = Math.max(0, index - barCount + 1);
-        for (int i = 0; i < barCount; i++) {
-            Num number = ref.getValue(i + startIndex);
-            all[i] = number.doubleValue();
-        }
-
-        return all;
+        return IntStream.range(startIndex, startIndex + barCount)
+                .mapToObj(ref::getValue)
+                .map(Num::doubleValue)
+                .toArray(Double[]::new);
     }
 
 }

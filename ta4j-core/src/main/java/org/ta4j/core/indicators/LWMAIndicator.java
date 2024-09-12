@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -27,7 +27,7 @@ import org.ta4j.core.Indicator;
 import org.ta4j.core.num.Num;
 
 /**
- * Linearly Weighted Moving Average (LWMA).
+ * Linearly Weighted Moving Average (LWMA) indicator.
  *
  * @see <a href=
  *      "https://www.investopedia.com/terms/l/linearlyweightedmovingaverage.asp">
@@ -37,8 +37,14 @@ public class LWMAIndicator extends CachedIndicator<Num> {
 
     private final Indicator<Num> indicator;
     private final int barCount;
-    private final Num zero = numOf(0);
+    private final Num zero = zero();
 
+    /**
+     * Constructor.
+     * 
+     * @param indicator the {@link Indicator}
+     * @param barCount  the time frame
+     */
     public LWMAIndicator(Indicator<Num> indicator, int barCount) {
         super(indicator);
         this.indicator = indicator;
@@ -62,6 +68,11 @@ public class LWMAIndicator extends CachedIndicator<Num> {
             sum = sum.plus(indicator.getValue(i).multipliedBy(numOf(count)));
         }
         return sum.dividedBy(denominator);
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return 0;
     }
 
     @Override

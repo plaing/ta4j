@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,20 +23,20 @@
  */
 package org.ta4j.core.indicators;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.ta4j.core.Indicator;
-import org.ta4j.core.IndicatorFactory;
-import org.ta4j.core.num.DoubleNum;
-import org.ta4j.core.num.Num;
-import org.ta4j.core.num.DecimalNum;
-
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.ta4j.core.Indicator;
+import org.ta4j.core.IndicatorFactory;
+import org.ta4j.core.num.DecimalNum;
+import org.ta4j.core.num.DoubleNum;
+import org.ta4j.core.num.Num;
 
 /**
  * Abstract test class to extend BarSeries, Indicator an other test cases. The

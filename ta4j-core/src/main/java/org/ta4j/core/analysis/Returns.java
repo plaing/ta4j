@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,21 +23,19 @@
  */
 package org.ta4j.core.analysis;
 
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.Indicator;
-import org.ta4j.core.Trade;
-import org.ta4j.core.TradingRecord;
-import org.ta4j.core.num.NaN;
-import org.ta4j.core.num.Num;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.Indicator;
+import org.ta4j.core.Position;
+import org.ta4j.core.TradingRecord;
+import org.ta4j.core.num.NaN;
+import org.ta4j.core.num.Num;
+
 /**
- * The return rates.
- *
- * This class allows to compute the return rate of a price time-series
+ * Allows to compute the return rate of a price time-series.
  */
 public class Returns implements Indicator<Num> {
 
@@ -58,43 +56,38 @@ public class Returns implements Indicator<Num> {
         };
 
         /**
-         * @return calculate a single return rate
+         * @return the single return rate
          */
         public abstract Num calculate(Num xNew, Num xOld);
     }
 
     private final ReturnType type;
 
-    /**
-     * The bar series
-     */
+    /** The bar series. */
     private final BarSeries barSeries;
 
-    /**
-     * The return rates
-     */
-    private List<Num> values;
+    /** The return rates. */
+    private final List<Num> values;
 
-    /**
-     * Unit element for efficient arithmetic return computation
-     */
+    /** Unit element for efficient arithmetic return computation. */
     private static Num one;
 
     /**
      * Constructor.
      *
      * @param barSeries the bar series
-     * @param trade     a single trade
+     * @param position  a single position
+     * @param type      the ReturnType
      */
-    public Returns(BarSeries barSeries, Trade trade, ReturnType type) {
-        one = barSeries.numOf(1);
+    public Returns(BarSeries barSeries, Position position, ReturnType type) {
+        one = barSeries.one();
         this.barSeries = barSeries;
         this.type = type;
         // at index 0, there is no return
         values = new ArrayList<>(Collections.singletonList(NaN.NaN));
-        calculate(trade);
+        calculate(position, barSeries.getEndIndex());
 
-        fillToTheEnd();
+        fillToTheEnd(barSeries.getEndIndex());
     }
 
     /**
@@ -102,18 +95,22 @@ public class Returns implements Indicator<Num> {
      *
      * @param barSeries     the bar series
      * @param tradingRecord the trading record
+     * @param type          the ReturnType
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnType type) {
-        one = barSeries.numOf(1);
+        one = barSeries.one();
         this.barSeries = barSeries;
         this.type = type;
         // at index 0, there is no return
         values = new ArrayList<>(Collections.singletonList(NaN.NaN));
         calculate(tradingRecord);
 
-        fillToTheEnd();
+        fillToTheEnd(tradingRecord.getEndIndex(barSeries));
     }
 
+    /**
+     * @return the return rates
+     */
     public List<Num> getValues() {
         return values;
     }
@@ -125,6 +122,11 @@ public class Returns implements Indicator<Num> {
     @Override
     public Num getValue(int index) {
         return values.get(index);
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return 0;
     }
 
     @Override
@@ -144,41 +146,38 @@ public class Returns implements Indicator<Num> {
         return barSeries.getBarCount() - 1;
     }
 
-    public void calculate(Trade trade) {
-        calculate(trade, barSeries.getEndIndex());
-    }
-
     /**
-     * Calculates the cash flow for a single trade (including accrued cashflow for
-     * open trades).
+     * Calculates the cash flow for a single position (including accrued cashflow
+     * for open positions).
      *
-     * @param trade      a single trade
-     * @param finalIndex index up until cash flow of open trades is considered
+     * @param position   a single position
+     * @param finalIndex the index up to which the cash flow of open positions is
+     *                   considered
      */
-    public void calculate(Trade trade, int finalIndex) {
-        boolean isLongTrade = trade.getEntry().isBuy();
+    public void calculate(Position position, int finalIndex) {
+        boolean isLongTrade = position.getEntry().isBuy();
         Num minusOne = barSeries.numOf(-1);
-        int endIndex = CashFlow.determineEndIndex(trade, finalIndex, barSeries.getEndIndex());
-        final int entryIndex = trade.getEntry().getIndex();
+        int endIndex = CashFlow.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
+        final int entryIndex = position.getEntry().getIndex();
         int begin = entryIndex + 1;
         if (begin > values.size()) {
-            values.addAll(Collections.nCopies(begin - values.size(), barSeries.numOf(0)));
+            values.addAll(Collections.nCopies(begin - values.size(), barSeries.zero()));
         }
 
         int startingIndex = Math.max(begin, 1);
         int nPeriods = endIndex - entryIndex;
-        Num holdingCost = trade.getHoldingCost(endIndex);
+        Num holdingCost = position.getHoldingCost(endIndex);
         Num avgCost = holdingCost.dividedBy(holdingCost.numOf(nPeriods));
 
         // returns are per period (iterative). Base price needs to be updated
         // accordingly
-        Num lastPrice = trade.getEntry().getNetPrice();
+        Num lastPrice = position.getEntry().getNetPrice();
         for (int i = startingIndex; i < endIndex; i++) {
             Num intermediateNetPrice = CashFlow.addCost(barSeries.getBar(i).getClosePrice(), avgCost, isLongTrade);
             Num assetReturn = type.calculate(intermediateNetPrice, lastPrice);
 
             Num strategyReturn;
-            if (trade.getEntry().isBuy()) {
+            if (position.getEntry().isBuy()) {
                 strategyReturn = assetReturn;
             } else {
                 strategyReturn = assetReturn.multipliedBy(minusOne);
@@ -188,17 +187,17 @@ public class Returns implements Indicator<Num> {
             lastPrice = barSeries.getBar(i).getClosePrice();
         }
 
-        // add net return at exit trade
+        // add net return at exit position
         Num exitPrice;
-        if (trade.getExit() != null) {
-            exitPrice = trade.getExit().getNetPrice();
+        if (position.getExit() != null) {
+            exitPrice = position.getExit().getNetPrice();
         } else {
             exitPrice = barSeries.getBar(endIndex).getClosePrice();
         }
 
         Num strategyReturn;
         Num assetReturn = type.calculate(CashFlow.addCost(exitPrice, avgCost, isLongTrade), lastPrice);
-        if (trade.getEntry().isBuy()) {
+        if (position.getEntry().isBuy()) {
             strategyReturn = assetReturn;
         } else {
             strategyReturn = assetReturn.multipliedBy(minusOne);
@@ -212,16 +211,19 @@ public class Returns implements Indicator<Num> {
      * @param tradingRecord the trading record
      */
     private void calculate(TradingRecord tradingRecord) {
-        // For each trade...
-        tradingRecord.getTrades().forEach(this::calculate);
+        int endIndex = tradingRecord.getEndIndex(getBarSeries());
+        // For each position...
+        tradingRecord.getPositions().forEach(p -> calculate(p, endIndex));
     }
 
     /**
-     * Fills with zeroes until the end of the series.
+     * Pads {@link #values} with zeros up until {@code endIndex}.
+     * 
+     * @param endIndex the end index
      */
-    private void fillToTheEnd() {
-        if (barSeries.getEndIndex() >= values.size()) {
-            values.addAll(Collections.nCopies(barSeries.getEndIndex() - values.size() + 1, barSeries.numOf(0)));
+    private void fillToTheEnd(int endIndex) {
+        if (endIndex >= values.size()) {
+            values.addAll(Collections.nCopies(barSeries.getEndIndex() - values.size() + 1, barSeries.zero()));
         }
     }
 }

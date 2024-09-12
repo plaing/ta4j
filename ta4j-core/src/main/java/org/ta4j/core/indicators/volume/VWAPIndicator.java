@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,8 +23,8 @@
  */
 package org.ta4j.core.indicators.volume;
 
-import org.ta4j.core.Indicator;
 import org.ta4j.core.BarSeries;
+import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.CachedIndicator;
 import org.ta4j.core.indicators.helpers.TypicalPriceIndicator;
 import org.ta4j.core.indicators.helpers.VolumeIndicator;
@@ -32,7 +32,7 @@ import org.ta4j.core.num.Num;
 
 /**
  * The volume-weighted average price (VWAP) Indicator.
- * 
+ *
  * @see <a href=
  *      "http://www.investopedia.com/articles/trading/11/trading-with-vwap-mvwap.asp">
  *      http://www.investopedia.com/articles/trading/11/trading-with-vwap-mvwap.asp</a>
@@ -51,8 +51,8 @@ public class VWAPIndicator extends CachedIndicator<Num> {
 
     /**
      * Constructor.
-     * 
-     * @param series   the series
+     *
+     * @param series   the bar series
      * @param barCount the time frame
      */
     public VWAPIndicator(BarSeries series, int barCount) {
@@ -60,7 +60,7 @@ public class VWAPIndicator extends CachedIndicator<Num> {
         this.barCount = barCount;
         this.typicalPrice = new TypicalPriceIndicator(series);
         this.volume = new VolumeIndicator(series);
-        this.zero = numOf(0);
+        this.zero = zero();
     }
 
     @Override
@@ -77,6 +77,11 @@ public class VWAPIndicator extends CachedIndicator<Num> {
             cumulativeVolume = cumulativeVolume.plus(currentVolume);
         }
         return cumulativeTPV.dividedBy(cumulativeVolume);
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return barCount;
     }
 
     @Override

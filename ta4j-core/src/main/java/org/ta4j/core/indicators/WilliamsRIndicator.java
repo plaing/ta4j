@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,8 +23,8 @@
  */
 package org.ta4j.core.indicators;
 
-import org.ta4j.core.Indicator;
 import org.ta4j.core.BarSeries;
+import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.indicators.helpers.HighPriceIndicator;
 import org.ta4j.core.indicators.helpers.HighestValueIndicator;
@@ -34,7 +34,6 @@ import org.ta4j.core.num.Num;
 
 /**
  * William's R indicator.
- *
  *
  * @see <a href=
  *      "https://www.investopedia.com/terms/w/williamsr.asp">https://www.investopedia.com/terms/w/williamsr.asp</a>
@@ -47,11 +46,26 @@ public class WilliamsRIndicator extends CachedIndicator<Num> {
     private final LowPriceIndicator lowPriceIndicator;
     private final Num multiplier;
 
+    /**
+     * Constructor.
+     * 
+     * @param barSeries the bar series
+     * @param barCount  the time frame
+     */
     public WilliamsRIndicator(BarSeries barSeries, int barCount) {
         this(new ClosePriceIndicator(barSeries), barCount, new HighPriceIndicator(barSeries),
                 new LowPriceIndicator(barSeries));
     }
 
+    /**
+     * Constructor.
+     * 
+     * @param closePriceIndicator the {@link ClosePriceIndicator}
+     * @param barCount            the time frame for {@code highPriceIndicator} and
+     *                            {@code lowPriceIndicator}
+     * @param highPriceIndicator  the {@link HighPriceIndicator}
+     * @param lowPriceIndicator   the {@link LowPriceIndicator}
+     */
     public WilliamsRIndicator(ClosePriceIndicator closePriceIndicator, int barCount,
             HighPriceIndicator highPriceIndicator, LowPriceIndicator lowPriceIndicator) {
         super(closePriceIndicator);
@@ -72,6 +86,11 @@ public class WilliamsRIndicator extends CachedIndicator<Num> {
 
         return ((highestHighPrice.minus(closePriceIndicator.getValue(index)))
                 .dividedBy(highestHighPrice.minus(lowestLowPrice))).multipliedBy(multiplier);
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return barCount;
     }
 
     @Override

@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,33 +23,38 @@
  */
 package org.ta4j.core.indicators.statistics;
 
+import static org.ta4j.core.num.NaN.NaN;
+
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.CachedIndicator;
 import org.ta4j.core.num.Num;
 
-import static org.ta4j.core.num.NaN.NaN;
-
 /**
  * Simple linear regression indicator.
  *
+ * <p>
  * A moving (i.e. over the time frame) simple linear regression (least squares).
- * y = slope * x + intercept See also:
- * http://introcs.cs.princeton.edu/java/97data/LinearRegression.java.html
+ * 
+ * <pre>
+ * y = slope * x + intercept
+ * </pre>
+ * 
+ * @see http://introcs.cs.princeton.edu/java/97data/LinearRegression.java.html
  */
 public class SimpleLinearRegressionIndicator extends CachedIndicator<Num> {
 
     /**
-     * The type for the outcome of the {@link SimpleLinearRegressionIndicator}
+     * The type for the outcome of the {@link SimpleLinearRegressionIndicator}.
      */
     public enum SimpleLinearRegressionType {
         Y, SLOPE, INTERCEPT
     }
 
-    private Indicator<Num> indicator;
-    private int barCount;
+    private final Indicator<Num> indicator;
+    private final int barCount;
     private Num slope;
     private Num intercept;
-    private SimpleLinearRegressionType type;
+    private final SimpleLinearRegressionType type;
 
     /**
      * Constructor for the y-values of the formula (y = slope * x + intercept).
@@ -95,6 +100,11 @@ public class SimpleLinearRegressionIndicator extends CachedIndicator<Num> {
         return slope.multipliedBy(numOf(index)).plus(intercept);
     }
 
+    @Override
+    public int getUnstableBars() {
+        return barCount;
+    }
+
     /**
      * Calculates the regression line.
      *
@@ -102,9 +112,10 @@ public class SimpleLinearRegressionIndicator extends CachedIndicator<Num> {
      * @param endIndex   the end index (inclusive) in the bar series
      */
     private void calculateRegressionLine(int startIndex, int endIndex) {
+        Num zero = zero();
         // First pass: compute xBar and yBar
-        Num sumX = numOf(0);
-        Num sumY = numOf(0);
+        Num sumX = zero;
+        Num sumY = zero;
         for (int i = startIndex; i <= endIndex; i++) {
             sumX = sumX.plus(numOf(i));
             sumY = sumY.plus(indicator.getValue(i));
@@ -114,8 +125,8 @@ public class SimpleLinearRegressionIndicator extends CachedIndicator<Num> {
         Num yBar = sumY.dividedBy(nbObservations);
 
         // Second pass: compute slope and intercept
-        Num xxBar = numOf(0);
-        Num xyBar = numOf(0);
+        Num xxBar = zero;
+        Num xyBar = zero;
         for (int i = startIndex; i <= endIndex; i++) {
             Num dX = numOf(i).minus(xBar);
             Num dY = indicator.getValue(i).minus(yBar);

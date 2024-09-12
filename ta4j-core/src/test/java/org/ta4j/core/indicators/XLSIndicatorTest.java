@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,19 +23,19 @@
  */
 package org.ta4j.core.indicators;
 
+import java.util.function.Function;
+
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.ExternalIndicatorTest;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.XlsTestsUtils;
 import org.ta4j.core.num.Num;
 
-import java.util.function.Function;
-
 public class XLSIndicatorTest implements ExternalIndicatorTest {
 
-    private Class<?> clazz;
-    private String fileName;
-    private int column;
+    private final Class<?> clazz;
+    private final String fileName;
+    private final int column;
     private BarSeries cachedSeries = null;
     private final Function<Number, Num> numFunction;
 
@@ -59,6 +59,7 @@ public class XLSIndicatorTest implements ExternalIndicatorTest {
      * @return BarSeries from the file
      * @throws Exception if getSeries throws IOException or DataFormatException
      */
+    @Override
     public BarSeries getSeries() throws Exception {
         if (cachedSeries == null) {
             cachedSeries = XlsTestsUtils.getSeries(clazz, fileName, numFunction);
@@ -73,6 +74,7 @@ public class XLSIndicatorTest implements ExternalIndicatorTest {
      * @return Indicator from the file given the parameters
      * @throws Exception if getIndicator throws IOException or DataFormatException
      */
+    @Override
     public Indicator<Num> getIndicator(Object... params) throws Exception {
         return XlsTestsUtils.getIndicator(clazz, fileName, column, getSeries().function(), params);
     }

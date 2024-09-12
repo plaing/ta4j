@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -23,11 +23,11 @@
  */
 package org.ta4j.core.indicators.statistics;
 
+import static org.ta4j.core.num.NaN.NaN;
+
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.RecursiveCachedIndicator;
 import org.ta4j.core.num.Num;
-
-import static org.ta4j.core.num.NaN.NaN;
 
 /**
  * Indicator-Pearson-Correlation
@@ -37,8 +37,6 @@ import static org.ta4j.core.num.NaN.NaN;
  *      http://www.statisticshowto.com/probability-and-statistics/correlation-coefficient-formula/</a>
  */
 public class PearsonCorrelationIndicator extends RecursiveCachedIndicator<Num> {
-
-    private static final long serialVersionUID = 6317147143504055664L;
 
     private final Indicator<Num> indicator1;
     private final Indicator<Num> indicator2;
@@ -63,11 +61,12 @@ public class PearsonCorrelationIndicator extends RecursiveCachedIndicator<Num> {
 
         Num n = numOf(barCount);
 
-        Num Sx = numOf(0);
-        Num Sy = numOf(0);
-        Num Sxx = numOf(0);
-        Num Syy = numOf(0);
-        Num Sxy = numOf(0);
+        Num zero = zero();
+        Num Sx = zero;
+        Num Sy = zero;
+        Num Sxx = zero;
+        Num Syy = zero;
+        Num Sxy = zero;
 
         for (int i = Math.max(getBarSeries().getBeginIndex(), index - barCount + 1); i <= index; i++) {
 
@@ -85,12 +84,17 @@ public class PearsonCorrelationIndicator extends RecursiveCachedIndicator<Num> {
         Num toSqrt = (n.multipliedBy(Sxx).minus(Sx.multipliedBy(Sx)))
                 .multipliedBy(n.multipliedBy(Syy).minus(Sy.multipliedBy(Sy)));
 
-        if (toSqrt.isGreaterThan(numOf(0))) {
+        if (toSqrt.isGreaterThan(zero())) {
             // pearson = (n * Sxy - Sx * Sy) / sqrt((n * Sxx - Sx * Sx) * (n * Syy - Sy *
             // Sy))
             return (n.multipliedBy(Sxy).minus(Sx.multipliedBy(Sy))).dividedBy(toSqrt.sqrt());
         }
 
         return NaN;
+    }
+
+    @Override
+    public int getUnstableBars() {
+        return barCount;
     }
 }

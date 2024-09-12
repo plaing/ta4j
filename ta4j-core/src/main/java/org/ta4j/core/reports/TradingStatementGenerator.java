@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2014-2017 Marc de Verdelhan, 2017-2021 Ta4j Organization & respective
+ * Copyright (c) 2017-2023 Ta4j Organization & respective
  * authors (see AUTHORS)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -28,32 +28,40 @@ import org.ta4j.core.Strategy;
 import org.ta4j.core.TradingRecord;
 
 /**
- * This class generates TradingStatement basis on provided trading report and
- * bar series
- *
- * @see TradingStatement
+ * Generates a {@link TradingStatement} based on the provided trading record and
+ * bar series.
  */
 public class TradingStatementGenerator implements ReportGenerator<TradingStatement> {
 
     private final PerformanceReportGenerator performanceReportGenerator;
-    private final TradeStatsReportGenerator tradeStatsReportGenerator;
+    private final PositionStatsReportGenerator positionStatsReportGenerator;
 
+    /**
+     * Constructor with new {@link PerformanceReportGenerator} and new
+     * {@link PositionStatsReportGenerator}.
+     */
     public TradingStatementGenerator() {
-        this(new PerformanceReportGenerator(), new TradeStatsReportGenerator());
+        this(new PerformanceReportGenerator(), new PositionStatsReportGenerator());
     }
 
+    /**
+     * Constructor.
+     * 
+     * @param performanceReportGenerator   the {@link PerformanceReportGenerator}
+     * @param positionStatsReportGenerator the {@link PositionStatsReportGenerator}
+     */
     public TradingStatementGenerator(PerformanceReportGenerator performanceReportGenerator,
-            TradeStatsReportGenerator tradeStatsReportGenerator) {
-        super();
+            PositionStatsReportGenerator positionStatsReportGenerator) {
         this.performanceReportGenerator = performanceReportGenerator;
-        this.tradeStatsReportGenerator = tradeStatsReportGenerator;
+        this.positionStatsReportGenerator = positionStatsReportGenerator;
     }
 
     @Override
     public TradingStatement generate(Strategy strategy, TradingRecord tradingRecord, BarSeries series) {
         final PerformanceReport performanceReport = performanceReportGenerator.generate(strategy, tradingRecord,
                 series);
-        final TradeStatsReport tradeStatsReport = tradeStatsReportGenerator.generate(strategy, tradingRecord, series);
-        return new TradingStatement(strategy, tradeStatsReport, performanceReport);
+        final PositionStatsReport positionStatsReport = positionStatsReportGenerator.generate(strategy, tradingRecord,
+                series);
+        return new TradingStatement(strategy, positionStatsReport, performanceReport);
     }
 }

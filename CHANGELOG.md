@@ -1,16 +1,262 @@
 Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangelog.com/en/1.0.0/) from version 0.9 onwards.
 
-## 0.14 (unreleased)
+## 0.17
 
 ### Breaking
-- **Breaking:** **PrecisionNum** renamed to **DecimalNum**
-- **Breaking:** **AverageProfitableTradesCriterion** renamed to **WinningTradesRatioCriterion**
-- **Breaking:** **AverageProfitCriterion** renamed to **AverageReturnPerBarCriterion**
-- **Breaking:** **BuyAndHoldCriterion** renamed to **BuyAndHoldReturnCriterion**
-- **Breaking:** **RewardRiskRatioCriterion** renamed to **ReturnOverMaxDrawdownCriterion**
-- **Breaking:** **TotalProfitCriterion** renamed to **TotalReturnCriterion**
-- **Breaking:** **TotalProfit2Criterion** renamed to **TotalProfitCriterion**
+- Renamed **SMAIndicatorMovingSerieTest** to **SMAIndicatorMovingSeriesTest**
+
+### Fixed
+- Fixed **ta4jexamples** project still pointing to old (0.16) version of **ta4j-core**
+- Fixed **SMAIndicatorMovingSeriesTest** test flakiness where on fast enough build machines the mock bars are created with the exact same end time
+- Fixed NaN in **DXIndicator, MinusDIIndicator, PlusDIIndicator** if there is no trend
+- Fixed look ahead bias in **RecentSwingHighIndicator** and **RecentSwingLowIndicator**
+
+### Changed
+- Implemented inner cache for **SMAIndicator**
+- **BooleanTransformIndicator** remove enum constraint in favor of more flexible `Predicate`
+- **EnterAndHoldReturnCriterion** replaced by `EnterAndHoldCriterion` to calculate the "enter and hold"-strategy of any criteria.
+
+### Removed/Deprecated
+
+### Added
+- Added signal line and histogram to **MACDIndicator**
+- Added getTransactionCostModel, getHoldingCostModel, getTrades in **TradingRecord**
+- Added `Num.bigDecimalValue(DoubleNum)` to convert Num to a BigDecimal
+- Added **AverageTrueRangeTrailingStopLossRule**
+- Added **AverageTrueRangeStopLossRule**
+- Added **AverageTrueRangeStopGainRule**
+- Added **SqueezeProIndicator**
+- Added **RecentSwingHighIndicator**
+- Added **RecentSwingLowIndicator**
+- Added **KalmanFilterIndicator**
+- Added **HammerIndicator**
+- Added **InvertedHammerIndicator**
+- Added **HangingManIndicator**
+- Added **ShootingStarIndicator**
+- Added **DownTrendIndicator**
+- Added **UpTrendIndicator**
+
+## 0.16 (released May 15, 2024)
+
+### Breaking
+- **Upgraded to Java 11**
+- **VersusBuyAndHoldCriterion** renamed to **`VersusEnterAndHoldCriterion`**
+- **BarSeries** constructors use any instance of Num instead of Num-Function
+- **GrossReturnCriterion** renamed to **`ReturnCriterion`**
+- **NetProfitCriterion** and **GrossProfitCriterion** replaced by **`ProfitCriterion`**
+- **NetLossCriterion** and **GrossLossCriterion** replaced by **`LossCriterion`**
+- **LosingPositionsRatioCriterion** replaced by **`PositionsRatioCriterion`**
+- **WinningPositionsRatioCriterion** replaced by **`PositionsRatioCriterion`**
+- **Strategy#unstablePeriod** renamed to **`Strategy#unstableBars*`**
+- **DateTimeIndicator** moved to package **`indicators/helpers`**
+- **UnstableIndicator** moved to package **`indicators/helpers`**
+- **ConvertableBaseBarBuilder** renamed to **`BaseBarConvertableBuilder`**
+- **BarSeriesManager** updated to use **`TradeOnNextOpenModel`** by default, which opens new trades at index `t + 1` at the open price.
+  - For strategies require the previous behaviour, i.e. trades seconds or minutes before the closing prices, **`TradeOnCurerentCloseModel`** can be passed to **BarSeriesManager**
+    - For example:
+      - `BarSeriesManager manager = new BarSeriesManager(barSeries, new TradeOnCurrentCloseModel())`
+      - `BarSeriesManager manager = new BarSeriesManager(barSeries, transactionCostModel, holdingCostModel, tradeExecutionModel)`
+- **BarSeriesManager** and **BacktestExecutor** moved to packge **`backtest`**
+- **BarSeries#getBeginIndex()** methode returns correct begin index for bar series with max bar count
+
+### Fixed
+- **Fixed** **SuperTrendIndicator** fixed calculation when close price is the same as the previous Super Trend indicator value
+- **Fixed** **ParabolicSarIndicator** fixed calculation for sporadic indices
+- **ExpectancyCriterion** fixed calculation
+- catch NumberFormatException if `DecimalNum.valueOf(Number)` is `NaN`
+- **ProfitCriterion** fixed excludeCosts functionality as it was reversed
+- **LossCriterion** fixed excludeCosts functionality as it was reversed
+- **PerformanceReportGenerator** fixed netProfit and netLoss calculations to include costs
+- **DifferencePercentageIndicator** fixed re-calculate instance variable on every iteration
+- **ThreeWhiteSoldiersIndicator** fixed eliminated instance variable holding possible wrong value
+- **ThreeBlackCrowsIndicator** fixed eliminated instance variable holding possible wrong value
+- **TrailingStopLossRule** removed instance variable `currentStopLossLimitActivation` because it may not be alway the correct (last) value
+- sets `ClosePriceDifferenceIndicator#getUnstableBars` = `1`
+- sets `ClosePriceRatioIndicator#getUnstableBars` = `1`
+- sets `ConvergenceDivergenceIndicator#getUnstableBars` = `barCount`
+- sets `GainIndicator#getUnstableBars` = `1`
+- sets `HighestValueIndicator#getUnstableBars` = `barCount`
+- sets `LossIndicator#getUnstableBars` = `1`
+- sets `LowestValueIndicator#getUnstableBars` = `barCount`
+- sets `TRIndicator#getUnstableBars` = `1`
+- sets `PreviousValueIndicator#getUnstableBars` = `n` (= the n-th previous index)
+- **PreviousValueIndicator** returns `NaN` if the (n-th) previous value of an indicator does not exist, i.e. if the (n-th) previous is below the first available index. 
+- **EnterAndHoldReturnCriterion** fixes exception thrown when bar series was empty
+- **BaseBarSeries** fixed `UnsupportedOperationException` when creating a bar series that is based on an unmodifiable collection
+- **Num** implements Serializable
+
+### Changed
+- **BarSeriesManager** consider finishIndex when running backtest
+- **BarSeriesManager** add **`holdingTransaction`**
+- **BacktestExecutor** evaluates strategies in parallel when possible
+- **CachedIndicator** synchronize on getValue()
+- **BaseBar** defaults to **`DecimalNum`** type in all constructors
+- **TRIndicator** improved calculation
+- **WMAIndicator** improved calculation
+- **KSTIndicator** improved calculation
+- **RSIIndicator** simplify calculation
+- **FisherIndicator** improved calculation
+- **DoubleEMAIndicator** improved calculation
+- **CMOIndicator** improved calculation
+- **PearsonCorrelationIndicator** improved calculation
+- **PivotPoint**-Indicators improved calculations
+- **ValueAtRiskCriterion** improved calculation
+- **ExpectedShortfallCriterion** improved calculation
+- **SqnCriterion** improved calculation
+- **NumberOfBreakEvenPositionsCriterion** shorten code
+- **AverageReturnPerBarCriterion** improved calculation
+- **ZLEMAIndicator** improved calculation
+- **InPipeRule** improved calculation
+- **SumIndicator** improved calculation
+- updated pom.xml: slf4j-api to 2.0.7
+- updated pom.xml: org.apache.poi to 5.2.3
+- updated pom.xml: maven-jar-plugin to 3.3.0
+- add `final` to properties where possible
+- improved javadoc
+- **SuperTrendIndicator**,**SuperTrendUpperIndicator**,**SuperTrendLowerIndicator**: optimized calculation
+- **SuperTrendIndicator**, **SuperTrendLowerBandIndicator**, **SuperTrendUpperBandIndicator**: `multiplier` changed to from `Integer` to `Double`
+- add missing `@Override` annotation
+- **RecursiveCachedIndicator**: simplified code
+- **LossIndicator**: optimize calculation
+- **GainIndicator**: improved calculation
+- **PriceVariationIndicator** renamed to **ClosePriceRatioIndicator** for consistency with new **ClosePriceDifferenceIndicator**
+- made **UnaryOperation** and **BinaryOperation** public 
+
+### Removed/Deprecated
+- removed **Serializable** from `CostModel`
+- removed `@Deprecated Bar#addTrade(double tradeVolume, double tradePrice, Function<Number, Num> numFunction)`; use `Bar#addTrade(Num tradeVolume, Num tradePrice)` instead.
+- removed `@Deprecated Bar#addTrade(String tradeVolume, String tradePrice, Function<Number, Num> numFunction)`; use `Bar#addTrade(Num tradeVolume, Num tradePrice)` instead.
+- removed `DecimalNum.valueOf(DecimalNum)`
+- delete `.travis.yml` as this project is managed by "Github actions"
+
+### Added
+- added `TradingRecord.getStartIndex()` and `TradingRecord.getEndIndex()` to track start and end of the recording
+- added **SuperTrendIndicator**
+- added **SuperTrendUpperBandIndicator**
+- added **SuperTrendLowerBandIndicator**
+- added **Donchian Channel indicators (Upper, Lower, and Middle)**
+- added `Indicator.getUnstableBars()`
+- added `TransformIndicator.pow()`
+- added `BarSeriesManager.getHoldingCostModel()` and `BarSeriesManager.getTransactionCostModel()`  to allow extending BarSeriesManager and reimplementing `run()`
+- added `MovingAverageCrossOverRangeBacktest.java` and `ETH-USD-PT5M-2023-3-13_2023-3-15.json` test data file to demonstrate parallel strategy evaluation
+- added javadoc improvements for percentage criteria
+- added "lessIsBetter"-property for **AverageCriterion**
+- added "lessIsBetter"-property for **RelativeStandardDeviation**
+- added "lessIsBetter"-property for **StandardDeviationCriterion**
+- added "lessIsBetter"-property for **StandardErrorCriterion**
+- added "lessIsBetter"-property for **VarianceCriterion**
+- added "lessIsBetter"-property for **NumberOfPositionsCriterion**
+- added "addBase"-property for **ReturnCriterion** to include or exclude the base percentage of 1
+- added **RelativeVolumeStandardDeviationIndicator**
+- added **MoneyFlowIndexIndicator**
+- added **IntraDayMomentumIndexIndicator**
+- added **ClosePriceDifferenceIndicator**
+- added **TimeSegmentedVolumeIndicator**
+- added `DecimalNum.valueOf(DoubleNum)` to convert a DoubleNum to a DecimalNum.
+- added `DoubleNum.valueOf(DecimalNum)` to convert a DecimalNum to a DoubleNum.
+- added "TradeExecutionModel" to modify trade execution during backtesting
+- added **NumIndicator** to calculate any `Num`-value for a `Bar`
+- added **RunningTotalIndicator** to calculate a cumulative sum for a period.
+
+### Fixed
+- **Fixed** **CashFlow** fixed calculation with custom startIndex and endIndex
+- **Fixed** **Returns** fixed calculation with custom startIndex and endIndex
+- **Fixed** **ExpectedShortfallCriterion** fixed calculation with custom startIndex and endIndex
+- **Fixed** **MaximumDrawDownCriterion** fixed calculation with custom startIndex and endIndex
+- **Fixed** **EnterAndHoldReturnCriterion** fixed calculation with custom startIndex and endIndex
+- **Fixed** **VersusEnterAndHoldCriterion** fixed calculation with custom startIndex and endIndex
+- **Fixed** **BarSeriesManager** consider finishIndex when running backtest
+
+## 0.15 (released September 11, 2022)
+
+### Breaking
+- **NumberOfConsecutiveWinningPositions** renamed to **`NumberOfConsecutivePositions`**
+- **DifferencePercentage** renamed to **`DifferencePercentageIndicator`**
+- **BuyAndHoldCriterion** renamed to **`EnterAndHoldCriterion`**
+- **DXIndicator** moved to adx-package
+- **PlusDMIndicator** moved to adx-package
+- **MinusDMIndicator** moved to adx-package
+- `analysis/criterion`-package moved to root
+- `cost`-package moved to `analysis/cost`-package
+- **AroonXXX** indicators moved to aroon package
+
+### Fixed
+- **LosingPositionsRatioCriterion** correct betterThan
+- **VersusBuyAndHoldCriterionTest** NaN-Error.
+- **Fixed** **`ChaikinOscillatorIndicatorTest`**
+- **DecimalNum#remainder()** adds NaN-check
+- **Fixed** **ParabolicSarIndicatorTest** fixed openPrice always 0 and highPrice lower than lowPrice
+- **UlcerIndexIndicator** using the max price of current period instead of the highest value of last n bars
+- **DurationBarAggregator** fixed aggregation of bars with gaps
+
+
+### Changed
+- **KeltnerChannelMiddleIndicator** changed superclass to AbstractIndicator; add GetBarCount() and toString()
+- **KeltnerChannelUpperIndicator** add constructor to accept pre-constructed ATR; add GetBarCount() and toString()
+- **KeltnerChannelLowerIndicator** add constructor to accept pre-constructed ATR; add GetBarCount() and toString()
+- **BarSeriesManager** removed empty args constructor
+- **Open|High|Low|Close** do not cache price values anymore
+- **DifferenceIndicator(i1,i2)** replaced by the more flexible CombineIndicator.minus(i1,i2)
+- **DoubleNum** replace redundant `toString()` call in `DoubleNum.valueOf(Number i)` with `i.doubleValue()`
+- **ZeroCostModel** now extends from `FixedTransactionCostModel`
+
+### Removed/Deprecated
+- **Num** removed Serializable
+- **PriceIndicator** removed
+
+### Added
+- **NumericIndicator** new class providing a fluent and lightweight api for indicator creation
+- **AroonFacade**, **BollingerBandFacade**, **KeltnerChannelFacade** new classes providing a facade for indicator groups by using lightweight `NumericIndicators`
+- **AbstractEMAIndicator** added getBarCount() to support future enhancements
+- **ATRIndicator** "uncached" by changing superclass to AbstractIndicator; added constructor to accept TRIndicator and getter for same; added toString(); added getBarCount() to support future enhancements
+- :tada: **Enhancement** added possibility to use CostModels when backtesting with the BacktestExecutor
+- :tada: **Enhancement** added Num#zero, Num#one, Num#hundred
+- :tada: **Enhancement** added possibility to use CostModels when backtesting with the BacktestExecutor
+- :tada: **Enhancement** added Indicator#stream() method
+- :tada: **Enhancement** added a new CombineIndicator, which can combine the values of two Num Indicators with a given combine-function
+- **Example** added a json serialization and deserialization example of BarSeries using google-gson library
+- **EnterAndHoldCriterion** added constructor with TradeType to begin with buy or sell
+- :tada: **Enhancement** added Position#getStartingType() method
+- :tada: **Enhancement** added **`SqnCriterion`**
+- :tada: **Enhancement** added **`StandardDeviationCriterion`**
+- :tada: **Enhancement** added **`RelativeStandardDeviationCriterion`**
+- :tada: **Enhancement** added **`StandardErrorCriterion`**
+- :tada: **Enhancement** added **`VarianceCriterion`**
+- :tada: **Enhancement** added **`AverageCriterion`**
+- :tada: **Enhancement** added javadoc for all rules to make clear which rule makes use of a TradingRecord
+- **Enhancement** prevent Object[] allocation for varargs log.trace and log.debug calls by wrapping them in `if` blocks
+- :tada: **Enhancement** added **`FixedTransactionCostModel`**
+- :tada: **Enhancement** added **`AnalysisCriterion.PositionFilter`** to handle both sides within one Criterion.
+
+## 0.14 (released April 25, 2021)
+
+### Breaking
+- **Breaking:** **`PrecisionNum`** renamed to **`DecimalNum`**
+- **Breaking:** **`AverageProfitableTradesCriterion`** renamed to **`WinningTradesRatioCriterion`**
+- **Breaking:** **`AverageProfitCriterion`** renamed to **`AverageReturnPerBarCriterion`**
+- **Breaking:** **`BuyAndHoldCriterion`** renamed to **`BuyAndHoldReturnCriterion`**
+- **Breaking:** **`RewardRiskRatioCriterion`** renamed to **`ReturnOverMaxDrawdownCriterion`**
+- **Breaking:** **`ProfitLossCriterion`** moved to PnL-Package
+- **Breaking:** **`ProfitLossPercentageCriterion`** moved to PnL-Package
+- **Breaking:** **`TotalProfitCriterion`** renamed to **`GrossReturnCriterion`** and moved to PnL-Package.
+- **Breaking:** **`TotalProfit2Criterion`** renamed to **`GrossProfitCriterion`** and moved to PnL-Package.
+- **Breaking:** **`TotalLossCriterion`** renamed to **`NetLossCriterion`** and moved to PnL-Package.
 - **Breaking:** package "tradereports" renamed to "reports"
+- **Breaking:** **`NumberOfTradesCriterion`** renamed to **`NumberOfPositionsCriterion`**
+- **Breaking:** **`NumberOfLosingTradesCriterion`** renamed to **`NumberOfLosingPositionsCriterion`**
+- **Breaking:** **`NumberOfWinningTradesCriterion`** renamed to **`NumberOfWinningPositionsCriterion`**
+- **Breaking:** **`NumberOfBreakEvenTradesCriterion`** renamed to **`NumberOfBreakEvenPositionsCriterion`**
+- **Breaking:** **`WinningTradesRatioCriterion`** renamed to **`WinningPositionsRatioCriterion`**
+- **Breaking:** **`TradeStatsReport`** renamed to **`PositionStatsReport`**
+- **Breaking:** **`TradeStatsReportGenerator`** renamed to **`PositionStatsReportGenerator`**
+- **Breaking:** **`TradeOpenedMinimumBarCountRule`** renamed to **`OpenedPositionMinimumBarCountRule`**
+- **Breaking:** **`Trade.class`** renamed to **`Position.class`**
+- **Breaking:** **`Order.class`** renamed to **`Trade.class`**
+- **Breaking:** package "tradereports" renamed to "reports"
+- **Breaking:** package "trading/rules" renamed to "rules"
+- **Breaking:** remove Serializable from all indicators
+- **Breaking:** Bar#trades: changed type from int to long
+
 
 ### Fixed
 - **Fixed `Trade`**: problem with profit calculations on short trades.
@@ -18,6 +264,7 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 - **Fixed `BarSeriesBuilder`**: removed the Serializable interface
 - **Fixed `ParabolicSarIndicator`**: problem with calculating in special cases
 - **Fixed `BaseTimeSeries`**: can now be serialized
+- **Fixed `ProfitLossPercentageCriterion`**: use entryPrice#getValue() instead of entryPrice#getPricePerAsset()
 
 ### Changed
 - **Trade**: Changed the way Nums are created.
@@ -46,12 +293,30 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 - **Enhancement** Added getters getLow() and getUp() in CrossedDownIndicatorRule
 - **Enhancement** Added BarSeriesUtils: common helpers and shortcuts for BarSeries methods.
 - **Enhancement** Improvements for PreviousValueIndicator: more descriptive toString() method, validation of n-th previous bars in
- constructor of PreviousValueIndicator 
+- **Enhancement** Added Percentage Volume Oscillator Indicator, PVOIndicator.
+- **Enhancement** Added Distance From Moving Average Indicator, DistanceFromMAIndicator.
+- **Enhancement** Added Know Sure Thing Indicator, KSTIndicator.
+ constructor of PreviousValueIndicator
 - :tada: **Enhancement** added getGrossProfit() and getGrossProfit(BarSeries) on Trade.
 - :tada: **Enhancement** added getPricePerAsset(BarSeries) on Order.
 - :tada: **Enhancement** added convertBarSeries(BarSeries, conversionFunction) to BarSeriesUtils.
 - :tada: **Enhancement** added UnstableIndicator.
 - :tada: **Enhancement** added Chainrule.
+- :tada: **Enhancement** added BarSeriesUtils#sortBars.
+- :tada: **Enhancement** added BarSeriesUtils#addBars.
+- :tada: **Enhancement** added Num.negate() to negate a Num value.
+- :tada: **Enhancement** added **`GrossLossCriterion.class`**.
+- :tada: **Enhancement** added **`NetProfitCriterion.class`**.
+- :tada: **Enhancement** added chooseBest() method with parameter tradeType in AnalysisCriterion.
+- :tada: **Enhancement** added **`AverageLossCriterion.class`**.
+- :tada: **Enhancement** added **`AverageProfitCriterion.class`**.
+- :tada: **Enhancement** added **`ProfitLossRatioCriterion.class`**.
+- :tada: **Enhancement** added **`ExpectancyCriterion.class`**.
+- :tada: **Enhancement** added **`ConsecutiveWinningPositionsCriterion.class`**.
+- :tada: **Enhancement** added **`LosingPositionsRatioCriterion.class`**
+- :tada: **Enhancement** added Position#hasProfit.
+- :tada: **Enhancement** added Position#hasLoss.
+- :tada: **Enhancement** exposed both EMAs in MACD indicator
 
 
 ## 0.13 (released November 5, 2019)
@@ -85,22 +350,22 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 - **Enhancement** Added common constructors in BaseBar for BigDecimal, Double and String values
 - **Enhancement** Added constructor in BaseBar with trades property
 - **Enhancement** Added BaseBarBuilder and ConvertibleBaseBarBuilder - BaseBar builder classes
-- **Enhancement** Added BarAggregator and TimeSeriesAggregator to allow aggregates bars and time series 
+- **Enhancement** Added BarAggregator and TimeSeriesAggregator to allow aggregates bars and time series
 - **Enhancement** Added LWMA Linearly Weighted Moving Average Indicator
 - **Enhancement** Implemented trading cost models (linear transaction and borrowing cost models)
 - **Enhancement** Implemented Value at Risk Analysis Criterion
 - **Enhancement** Implemented Expected Shortfall Analysis Criterion
 - **Enhancement** Implemented Returns class to analyze the time series of return rates. Supports logarithmic and arithmetic returns
 - **Enhancement** Implemented a way to find the best result for multiple strategies by submitting a range of numbers while backtesting
-- **Enhancement** Implemented NumberOfBreakEvenTradesCriterion for counting break even trades 
+- **Enhancement** Implemented NumberOfBreakEvenTradesCriterion for counting break even trades
 - **Enhancement** Implemented NumberOfLosingTradesCriterion for counting losing trades
-- **Enhancement** Implemented NumberOfWinningTradesCriterion for counting winning trades 
-- **Enhancement** Implemented NumberOfWinningTradesCriterion for counting winning trades 
-- **Enhancement** Implemented ProfitLossPercentageCriterion for calculating the total performance percentage of your trades 
-- **Enhancement** Implemented TotalProfit2Criterion for calculating the total profit of your trades 
+- **Enhancement** Implemented NumberOfWinningTradesCriterion for counting winning trades
+- **Enhancement** Implemented NumberOfWinningTradesCriterion for counting winning trades
+- **Enhancement** Implemented ProfitLossPercentageCriterion for calculating the total performance percentage of your trades
+- **Enhancement** Implemented TotalProfit2Criterion for calculating the total profit of your trades
 - **Enhancement** Implemented TotalLossCriterion for calculating the total loss of your trades
-- **Enhancement** Added ADX indicator based strategy to ta4j-examples  
-- **Enhancement** TrailingStopLossRule: added possibility of calculations of TrailingStopLossRule also for open, high, low price. Added getter 
+- **Enhancement** Added ADX indicator based strategy to ta4j-examples
+- **Enhancement** TrailingStopLossRule: added possibility of calculations of TrailingStopLossRule also for open, high, low price. Added getter
 for currentStopLossLimitActivation
 - **Enhancement** Add constructors with parameters to allow custom implementation of ReportGenerators in BacktestExecutor
 - **Enhancement** Added license checker goal on CI's pipeline
@@ -110,8 +375,8 @@ for currentStopLossLimitActivation
 
 ## 0.12 (released September 10, 2018)
 
-### Breaking: 
-   - `Decimal` class has been replaced by new `Num` interface. Enables using `Double`, `BigDecimal` and custom data types for calculations. 
+### Breaking:
+   - `Decimal` class has been replaced by new `Num` interface. Enables using `Double`, `BigDecimal` and custom data types for calculations.
    - Big changes in `TimeSeries` and `BaseTimeSeries`. Multiple new `addBar(..)` functions in `TimeSeries` allow to add data directly to the series
 
 
